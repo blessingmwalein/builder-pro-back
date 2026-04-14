@@ -6,9 +6,20 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const defaultOrigins = [
+    'https://builder-pro-web.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5173',
+  ];
+  const envOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
+
   app.setGlobalPrefix('api/v1');
   app.enableCors({
-    origin: true,
+    origin: allowedOrigins,
     credentials: true,
   });
   app.useGlobalPipes(
