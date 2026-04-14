@@ -1,0 +1,5874 @@
+{
+  "info": {
+    "name": "BuilderPro Full API Collection",
+    "description": "Comprehensive collection for all /api/v1 endpoints. Includes sample request payloads and sample JSON responses based on DTOs and controller/service return shapes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3005/api/v1"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "tenantSlug",
+      "value": "builder-pro-demo"
+    },
+    {
+      "key": "projectId",
+      "value": "cm9v0pr0j0001abc"
+    },
+    {
+      "key": "taskId",
+      "value": "cm9v0task0001abc"
+    },
+    {
+      "key": "invoiceId",
+      "value": "cm9v0invoice0001abc"
+    },
+    {
+      "key": "quoteId",
+      "value": "cm9v0quote0001abc"
+    },
+    {
+      "key": "employeeId",
+      "value": "cm9v0emp0001abc"
+    },
+    {
+      "key": "clientId",
+      "value": "cm9v0client0001abc"
+    },
+    {
+      "key": "conversationId",
+      "value": "cm9v0conv0001abc"
+    },
+    {
+      "key": "userId",
+      "value": "cm9v0usr0001abc"
+    },
+    {
+      "key": "platformAdminEmail",
+      "value": "platform-admin@builderpro.local"
+    },
+    {
+      "key": "platformAdminPassword",
+      "value": "PlatformAdmin123!"
+    },
+    {
+      "key": "platformAdminToken",
+      "value": ""
+    },
+    {
+      "key": "platformAdminApiKey",
+      "value": "change-me-platform-admin-key"
+    }
+  ],
+  "item": [
+    {
+      "name": "App",
+      "item": [
+        {
+          "name": "GET /",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /auth/register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Blessing\",\n  \"lastName\": \"Moyo\",\n  \"email\": \"owner@builderpro.local\",\n  \"password\": \"ChangeMe123!\",\n  \"companySlug\": \"builder-pro-demo\",\n  \"phone\": \"+263771234567\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"accessToken\": \"eyJhbGciOi...tenant\",\n  \"refreshToken\": \"eyJhbGciOi...refresh\",\n  \"tokenType\": \"Bearer\",\n  \"expiresIn\": \"15m\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@builderpro.local\",\n  \"password\": \"ChangeMe123!\",\n  \"companySlug\": \"builder-pro-demo\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"accessToken\": \"eyJhbGciOi...tenant\",\n  \"refreshToken\": \"eyJhbGciOi...refresh\",\n  \"tokenType\": \"Bearer\",\n  \"expiresIn\": \"15m\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"accessToken\": \"eyJhbGciOi...tenant\",\n  \"refreshToken\": \"eyJhbGciOi...refresh\",\n  \"tokenType\": \"Bearer\",\n  \"expiresIn\": \"15m\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /auth/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/invite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/invite"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"new.user@builderpro.local\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"role\": \"Worker\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/accept-invite",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/accept-invite"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"invite-token-from-email\",\n  \"password\": \"ChangeMe123!\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"accessToken\": \"eyJhbGciOi...tenant\",\n  \"refreshToken\": \"eyJhbGciOi...refresh\",\n  \"tokenType\": \"Bearer\",\n  \"expiresIn\": \"15m\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "GET /users?page=1&limit=20&search=",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=20&search="
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /users/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /users/me",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Blessing\",\n  \"lastName\": \"Moyo\",\n  \"phone\": \"+263771234567\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /users/{{userId}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /users/{{userId}}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Blessing\",\n  \"lastName\": \"Moyo\",\n  \"phone\": \"+263771234567\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /users/{{userId}}/deactivate",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/deactivate"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /users/{{userId}}/activate",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/activate"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Companies",
+      "item": [
+        {
+          "name": "GET /companies/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/companies/me"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0co0001\",\n  \"name\": \"Builder Pro Demo\",\n  \"slug\": \"builder-pro-demo\",\n  \"isActive\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /companies/me",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/companies/me"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Builder Pro Zimbabwe\",\n  \"countryCode\": \"ZW\",\n  \"defaultCurrency\": \"USD\",\n  \"timezone\": \"Africa/Harare\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0co0001\",\n  \"name\": \"Builder Pro Demo\",\n  \"slug\": \"builder-pro-demo\",\n  \"isActive\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "POST /projects",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PRJ-2026-001\",\n  \"name\": \"Harare Mall Fit-out\",\n  \"description\": \"Interior civil works and finishes\",\n  \"status\": \"ACTIVE\",\n  \"startDate\": \"2026-04-05\",\n  \"endDate\": \"2026-07-20\",\n  \"baselineBudget\": 120000,\n  \"clientId\": \"{{clientId}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0pr0j0001abc\",\n  \"code\": \"PRJ-2026-001\",\n  \"name\": \"Harare Mall Fit-out\",\n  \"status\": \"ACTIVE\",\n  \"baselineBudget\": 120000\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /projects?page=1&limit=20&search=",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects?page=1&limit=20&search="
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /projects/{{projectId}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0pr0j0001abc\",\n  \"code\": \"PRJ-2026-001\",\n  \"name\": \"Harare Mall Fit-out\",\n  \"status\": \"ACTIVE\",\n  \"baselineBudget\": 120000\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /projects/{{projectId}}/dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}/dashboard"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /projects/{{projectId}}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Harare Mall Fit-out Phase 1\",\n  \"status\": \"ON_HOLD\",\n  \"completionPercent\": 45\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0pr0j0001abc\",\n  \"code\": \"PRJ-2026-001\",\n  \"name\": \"Harare Mall Fit-out\",\n  \"status\": \"ACTIVE\",\n  \"baselineBudget\": 120000\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /projects/{{projectId}}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /projects/{{projectId}}/members",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}/members"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /projects/{{projectId}}/members",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}/members"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"role\": \"Project Manager\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /projects/{{projectId}}/members/{{userId}}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}/members/{{userId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "POST /tasks",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"title\": \"Cast slab level 1\",\n  \"description\": \"Complete rebar and concrete pour\",\n  \"status\": \"TODO\",\n  \"priority\": \"HIGH\",\n  \"startDate\": \"2026-04-10\",\n  \"dueDate\": \"2026-04-13\",\n  \"estimatedHours\": 16.5,\n  \"assigneeIds\": [\n    \"{{userId}}\"\n  ]\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0task0001abc\",\n  \"title\": \"Cast slab level 1\",\n  \"status\": \"IN_PROGRESS\",\n  \"priority\": \"HIGH\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /tasks?projectId={{projectId}}&page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks?projectId={{projectId}}&page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /tasks/my-queue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/my-queue"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /tasks/{{taskId}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0task0001abc\",\n  \"title\": \"Cast slab level 1\",\n  \"status\": \"IN_PROGRESS\",\n  \"priority\": \"HIGH\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /tasks/{{taskId}}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Cast slab level 1 - updated\",\n  \"priority\": \"CRITICAL\",\n  \"dueDate\": \"2026-04-14\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0task0001abc\",\n  \"title\": \"Cast slab level 1\",\n  \"status\": \"IN_PROGRESS\",\n  \"priority\": \"HIGH\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /tasks/{{taskId}}/status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/status"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0task0001abc\",\n  \"title\": \"Cast slab level 1\",\n  \"status\": \"IN_PROGRESS\",\n  \"priority\": \"HIGH\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /tasks/{{taskId}}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /tasks/{{taskId}}/assignees/{{userId}}",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/assignees/{{userId}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /tasks/{{taskId}}/assignees/{{userId}}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/assignees/{{userId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /tasks/{{taskId}}/comments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/comments"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /tasks/{{taskId}}/comments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/comments"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Shuttering complete, waiting concrete truck.\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /tasks/{{taskId}}/checklists",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/checklists"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Pre-pour checks\",\n  \"items\": [\n    \"Rebar spacing verified\",\n    \"Formwork aligned\",\n    \"Vibrator available\"\n  ]\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /tasks/{{taskId}}/checklists/cm9v0chk0001/items/cm9v0it0001/toggle",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tasks/{{taskId}}/checklists/cm9v0chk0001/items/cm9v0it0001/toggle"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "POST /documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileKey\": \"projects/{{projectId}}/site-photo-001.jpg\",\n  \"fileName\": \"site-photo-001.jpg\",\n  \"contentType\": \"image/jpeg\",\n  \"sizeBytes\": 235900,\n  \"projectId\": \"{{projectId}}\",\n  \"type\": \"PHOTO\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /documents?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /documents/cm9v0doc0001abc",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/cm9v0doc0001abc"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /documents/cm9v0doc0001abc/download-url",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/cm9v0doc0001abc/download-url"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /documents/cm9v0doc0001abc",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/cm9v0doc0001abc"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Materials",
+      "item": [
+        {
+          "name": "POST /materials",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cement 32.5N\",\n  \"sku\": \"CEM-32-001\",\n  \"unit\": \"bag\",\n  \"unitCost\": 12.5,\n  \"supplierId\": \"cm9v0supplier0001abc\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0mat0001abc\",\n  \"name\": \"Cement 32.5N\",\n  \"unit\": \"bag\",\n  \"unitCost\": 12.5,\n  \"stockOnHand\": 200\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /materials?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /materials/low-stock",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials/low-stock"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /materials/logs?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials/logs?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /materials/cm9v0mat0001abc",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials/cm9v0mat0001abc"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0mat0001abc\",\n  \"name\": \"Cement 32.5N\",\n  \"unit\": \"bag\",\n  \"unitCost\": 12.5,\n  \"stockOnHand\": 200\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /materials/cm9v0mat0001abc",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials/cm9v0mat0001abc"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cement 42.5N\",\n  \"reorderAt\": 20,\n  \"unitCost\": 13.2\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0mat0001abc\",\n  \"name\": \"Cement 32.5N\",\n  \"unit\": \"bag\",\n  \"unitCost\": 12.5,\n  \"stockOnHand\": 200\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /materials/cm9v0mat0001abc/stock-adjust",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials/cm9v0mat0001abc/stock-adjust"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 50\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0mat0001abc\",\n  \"name\": \"Cement 32.5N\",\n  \"unit\": \"bag\",\n  \"unitCost\": 12.5,\n  \"stockOnHand\": 200\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /materials/cm9v0mat0001abc",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials/cm9v0mat0001abc"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /materials/usage",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials/usage"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"materialId\": \"cm9v0mat0001abc\",\n  \"quantity\": 120.75,\n  \"unitCost\": 11.2,\n  \"supplierId\": \"cm9v0supplier0001abc\",\n  \"notes\": \"Used for slab pour at block A\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /materials/suppliers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials/suppliers"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"BuildMart Supplies\",\n  \"email\": \"orders@buildmart.co.zw\",\n  \"phone\": \"+263772000111\",\n  \"address\": \"Harare\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /materials/suppliers/list?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials/suppliers/list?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /materials/suppliers/cm9v0supplier0001abc",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/materials/suppliers/cm9v0supplier0001abc"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Quotes",
+      "item": [
+        {
+          "name": "POST /quotes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"projectId\": \"{{projectId}}\",\n  \"title\": \"Quotation for phase 1\",\n  \"issueDate\": \"2026-04-02\",\n  \"expiryDate\": \"2026-04-16\",\n  \"lineItems\": [\n    {\n      \"category\": \"Labour\",\n      \"description\": \"Masons\",\n      \"quantity\": 24,\n      \"unitPrice\": 15.5\n    }\n  ]\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0quote0001abc\",\n  \"quoteNumber\": \"Q-2026-0001\",\n  \"status\": \"DRAFT\",\n  \"totalAmount\": 372\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /quotes?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /quotes/{{quoteId}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/{{quoteId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0quote0001abc\",\n  \"quoteNumber\": \"Q-2026-0001\",\n  \"status\": \"DRAFT\",\n  \"totalAmount\": 372\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /quotes/{{quoteId}}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/{{quoteId}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated quotation title\",\n  \"expiryDate\": \"2026-04-20\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0quote0001abc\",\n  \"quoteNumber\": \"Q-2026-0001\",\n  \"status\": \"DRAFT\",\n  \"totalAmount\": 372\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /quotes/{{quoteId}}/send",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/{{quoteId}}/send"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0quote0001abc\",\n  \"quoteNumber\": \"Q-2026-0001\",\n  \"status\": \"DRAFT\",\n  \"totalAmount\": 372\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /quotes/{{quoteId}}/approve",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/{{quoteId}}/approve"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0quote0001abc\",\n  \"quoteNumber\": \"Q-2026-0001\",\n  \"status\": \"DRAFT\",\n  \"totalAmount\": 372\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /quotes/{{quoteId}}/reject",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/{{quoteId}}/reject"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Price exceeds budget, please revise.\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0quote0001abc\",\n  \"quoteNumber\": \"Q-2026-0001\",\n  \"status\": \"DRAFT\",\n  \"totalAmount\": 372\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /quotes/{{quoteId}}/convert",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/{{quoteId}}/convert"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0quote0001abc\",\n  \"quoteNumber\": \"Q-2026-0001\",\n  \"status\": \"DRAFT\",\n  \"totalAmount\": 372\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /quotes/{{quoteId}}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/{{quoteId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /quotes/variations/{{projectId}}",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/variations/{{projectId}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Additional retaining wall\",\n  \"notes\": \"Client requested extension\",\n  \"amount\": 4500\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /quotes/variations/{{projectId}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/variations/{{projectId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /quotes/variations/cm9v0var0001abc/approve",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/variations/cm9v0var0001abc/approve"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /quotes/variations/cm9v0var0001abc/reject",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotes/variations/cm9v0var0001abc/reject"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Price exceeds budget, please revise.\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "POST /invoices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientId\": \"{{clientId}}\",\n  \"projectId\": \"{{projectId}}\",\n  \"quoteId\": \"{{quoteId}}\",\n  \"issueDate\": \"2026-04-02\",\n  \"dueDate\": \"2026-04-12\",\n  \"lineItems\": [\n    {\n      \"description\": \"Concrete works milestone 1\",\n      \"quantity\": 1,\n      \"unitPrice\": 3500\n    }\n  ]\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0invoice0001abc\",\n  \"invoiceNumber\": \"INV-2026-0001\",\n  \"status\": \"SENT\",\n  \"totalAmount\": 3500,\n  \"paidAmount\": 0,\n  \"balanceAmount\": 3500\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /invoices?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /invoices/aging-report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/aging-report"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /invoices/{{invoiceId}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0invoice0001abc\",\n  \"invoiceNumber\": \"INV-2026-0001\",\n  \"status\": \"SENT\",\n  \"totalAmount\": 3500,\n  \"paidAmount\": 0,\n  \"balanceAmount\": 3500\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /invoices/{{invoiceId}}/statement",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}/statement"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /invoices/{{invoiceId}}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dueDate\": \"2026-04-15\",\n  \"notes\": \"Updated payment terms\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0invoice0001abc\",\n  \"invoiceNumber\": \"INV-2026-0001\",\n  \"status\": \"SENT\",\n  \"totalAmount\": 3500,\n  \"paidAmount\": 0,\n  \"balanceAmount\": 3500\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /invoices/{{invoiceId}}/send",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}/send"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0invoice0001abc\",\n  \"invoiceNumber\": \"INV-2026-0001\",\n  \"status\": \"SENT\",\n  \"totalAmount\": 3500,\n  \"paidAmount\": 0,\n  \"balanceAmount\": 3500\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /invoices/{{invoiceId}}/void",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}/void"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0invoice0001abc\",\n  \"invoiceNumber\": \"INV-2026-0001\",\n  \"status\": \"SENT\",\n  \"totalAmount\": 3500,\n  \"paidAmount\": 0,\n  \"balanceAmount\": 3500\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /invoices/{{invoiceId}}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /invoices/{{invoiceId}}/payments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}/payments"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"PAYNOW\",\n  \"amount\": 1500\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /invoices/mark-overdue/run",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/mark-overdue/run"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Employees",
+      "item": [
+        {
+          "name": "POST /employees",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"employeeCode\": \"EMP-0004\",\n  \"jobTitle\": \"Foreman\",\n  \"employmentType\": \"Full-time\",\n  \"hourlyRate\": 12.5,\n  \"startDate\": \"2026-03-15\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0emp0001abc\",\n  \"employeeCode\": \"EMP-0004\",\n  \"jobTitle\": \"Foreman\",\n  \"isActive\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /employees?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /employees/payroll-export?from=2026-04-01&to=2026-04-30",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/payroll-export?from=2026-04-01&to=2026-04-30"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /employees/{{employeeId}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{employeeId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0emp0001abc\",\n  \"employeeCode\": \"EMP-0004\",\n  \"jobTitle\": \"Foreman\",\n  \"isActive\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /employees/{{employeeId}}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{employeeId}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jobTitle\": \"Senior Foreman\",\n  \"hourlyRate\": 14\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0emp0001abc\",\n  \"employeeCode\": \"EMP-0004\",\n  \"jobTitle\": \"Foreman\",\n  \"isActive\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /employees/{{employeeId}}/status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{employeeId}}/status"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": true\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0emp0001abc\",\n  \"employeeCode\": \"EMP-0004\",\n  \"jobTitle\": \"Foreman\",\n  \"isActive\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /employees/{{employeeId}}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{employeeId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Financials",
+      "item": [
+        {
+          "name": "GET /financials/summary?projectId={{projectId}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/financials/summary?projectId={{projectId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /financials/dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/financials/dashboard"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /financials/budget-categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/financials/budget-categories"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /financials/budget-categories",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/financials/budget-categories"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"LAB\",\n  \"name\": \"Labour\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /financials/projects/{{projectId}}/budget",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/financials/projects/{{projectId}}/budget"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /financials/projects/{{projectId}}/budget",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/financials/projects/{{projectId}}/budget"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"categories\": [\n    {\n      \"code\": \"LAB\",\n      \"plannedAmount\": 25000\n    },\n    {\n      \"code\": \"MAT\",\n      \"plannedAmount\": 40000\n    }\n  ],\n  \"thresholdPct\": 80\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /financials/projects/{{projectId}}/transactions?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/financials/projects/{{projectId}}/transactions?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /financials/transactions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/financials/transactions"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"categoryCode\": \"MAT\",\n  \"amount\": 1850.75,\n  \"description\": \"Purchased reinforcement bars\",\n  \"occurredAt\": \"2026-04-03T08:00:00.000Z\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Time Tracking",
+      "item": [
+        {
+          "name": "GET /time-tracking?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/time-tracking?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /time-tracking/active",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/time-tracking/active"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /time-tracking/weekly-summary?weekStart=2026-03-30",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/time-tracking/weekly-summary?weekStart=2026-03-30"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /time-tracking/clock-in",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/time-tracking/clock-in"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"taskId\": \"{{taskId}}\",\n  \"gpsInLat\": -17.8249,\n  \"gpsInLng\": 31.053\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /time-tracking/cm9v0time0001abc/clock-out",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/time-tracking/cm9v0time0001abc/clock-out"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"breakMinutes\": 30,\n  \"gpsOutLat\": -17.825,\n  \"gpsOutLng\": 31.0532\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /time-tracking/manual",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/time-tracking/manual"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"workerId\": \"{{userId}}\",\n  \"clockInAt\": \"2026-04-01T08:00:00.000Z\",\n  \"clockOutAt\": \"2026-04-01T17:00:00.000Z\",\n  \"breakMinutes\": 30,\n  \"notes\": \"Manual backfill\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /time-tracking/cm9v0time0001abc/approve",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/time-tracking/cm9v0time0001abc/approve"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\",\n  \"approvalComment\": \"Approved after site supervisor review\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CRM",
+      "item": [
+        {
+          "name": "POST /crm/clients",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/crm/clients"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Properties\",\n  \"email\": \"projects@acme.co.zw\",\n  \"phone\": \"+263772000111\",\n  \"address\": \"Samora Machel Ave, Harare\",\n  \"notes\": \"VIP client\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /crm/clients?page=1&limit=20&search=",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/crm/clients?page=1&limit=20&search="
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /crm/clients/{{clientId}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/crm/clients/{{clientId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /crm/clients/{{clientId}}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/crm/clients/{{clientId}}"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Properties Pvt Ltd\",\n  \"email\": \"projects@acme.co.zw\",\n  \"phone\": \"+263772000222\",\n  \"address\": \"Borrowdale, Harare\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /crm/clients/{{clientId}}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/crm/clients/{{clientId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Messaging",
+      "item": [
+        {
+          "name": "GET /messaging/conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/messaging/conversations"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /messaging/conversations",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/messaging/conversations"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"PROJECT\",\n  \"projectId\": \"{{projectId}}\",\n  \"participantIds\": [\n    \"{{userId}}\"\n  ]\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /messaging/projects/{{projectId}}/conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/messaging/projects/{{projectId}}/conversation"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /messaging/conversations/{{conversationId}}/messages?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/messaging/conversations/{{conversationId}}/messages?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /messaging/messages",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/messaging/messages"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversationId\": \"{{conversationId}}\",\n  \"body\": \"Please confirm slab pour is ready for tomorrow.\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0msg0001abc\",\n  \"conversationId\": \"cm9v0conv0001abc\",\n  \"body\": \"Please confirm slab pour is ready for tomorrow.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /messaging/conversations/{{conversationId}}/read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/messaging/conversations/{{conversationId}}/read"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "GET /notifications/me?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/me?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /notifications/cm9v0notif0001abc/read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/cm9v0notif0001abc/read"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isRead\": true\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "GET /subscriptions/plans",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/subscriptions/plans"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /subscriptions/current",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/subscriptions/current"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /subscriptions/change-plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/subscriptions/change-plan"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planCode\": \"PRO_MONTHLY\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Billing",
+      "item": [
+        {
+          "name": "POST /billing/paynow/initiate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/billing/paynow/initiate"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoiceId\": \"{{invoiceId}}\",\n  \"amount\": 1500,\n  \"currency\": \"USD\",\n  \"payerEmail\": \"payer@example.com\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /billing/webhooks/paynow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/billing/webhooks/paynow"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference\": \"paynow_ref_12345\",\n  \"companyId\": \"cm9v0co0001abc\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reporting",
+      "item": [
+        {
+          "name": "GET /reporting",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reporting"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /reporting/project-progress/{{projectId}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reporting/project-progress/{{projectId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /reporting/labour?from=2026-04-01&to=2026-04-30&projectId={{projectId}}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reporting/labour?from=2026-04-01&to=2026-04-30&projectId={{projectId}}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /reporting/materials?projectId={{projectId}}&from=2026-04-01&to=2026-04-30",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reporting/materials?projectId={{projectId}}&from=2026-04-01&to=2026-04-30"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /reporting/financial-summary?from=2026-04-01&to=2026-04-30",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reporting/financial-summary?from=2026-04-01&to=2026-04-30"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /reporting/generate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reporting/generate"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportType\": \"project-cost-summary\",\n  \"filters\": {\n    \"projectId\": \"{{projectId}}\",\n    \"from\": \"2026-04-01\",\n    \"to\": \"2026-04-30\"\n  }\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Onboarding",
+      "item": [
+        {
+          "name": "GET /onboarding/plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/onboarding/plans"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /onboarding/register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/onboarding/register"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Acme Construction\",\n  \"companySlug\": \"acme-construction\",\n  \"ownerFirstName\": \"John\",\n  \"ownerLastName\": \"Doe\",\n  \"ownerEmail\": \"john@acme.local\",\n  \"ownerPassword\": \"ChangeMe123!\",\n  \"planCode\": \"STARTER\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"accessToken\": \"eyJhbGciOi...tenant\",\n  \"refreshToken\": \"eyJhbGciOi...refresh\",\n  \"tokenType\": \"Bearer\",\n  \"expiresIn\": \"15m\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /onboarding/subscription-status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/onboarding/subscription-status"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /onboarding/activate-subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/onboarding/activate-subscription"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planCode\": \"PRO_MONTHLY\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "RBAC",
+      "item": [
+        {
+          "name": "GET /rbac/permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/permissions"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /rbac/roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /rbac/roles/cm9v0role0001abc",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles/cm9v0role0001abc"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /rbac/roles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Site Supervisor\",\n  \"description\": \"Supervises site operations\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /rbac/roles/cm9v0role0001abc",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles/cm9v0role0001abc"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Site Supervisor\",\n  \"description\": \"Updated role description\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /rbac/roles/cm9v0role0001abc",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles/cm9v0role0001abc"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /rbac/roles/cm9v0role0001abc/permissions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles/cm9v0role0001abc/permissions"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionKeys\": [\n    \"projects.view\",\n    \"tasks.*\"\n  ]\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /rbac/roles/cm9v0role0001abc/permissions/projects.view",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/roles/cm9v0role0001abc/permissions/projects.view"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /rbac/users/{{userId}}/roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/users/{{userId}}/roles"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /rbac/users/{{userId}}/roles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/users/{{userId}}/roles"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": \"cm9v0role0001abc\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /rbac/users/{{userId}}/roles/cm9v0role0001abc",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-tenant-slug",
+                "value": "{{tenantSlug}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/rbac/users/{{userId}}/roles/cm9v0role0001abc"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Platform Admin Auth",
+      "item": [
+        {
+          "name": "POST /platform-admin/auth/login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/platform-admin/auth/login"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{platformAdminEmail}}\",\n  \"password\": \"{{platformAdminPassword}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"tokenType\": \"Bearer\",\n  \"expiresIn\": \"12h\",\n  \"accessToken\": \"eyJhbGciOi...platform\",\n  \"admin\": {\n    \"id\": \"cm9v0padm0001\",\n    \"email\": \"platform-admin@builderpro.local\",\n    \"displayName\": \"Platform Admin\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /platform-admin/auth/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{platformAdminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/platform-admin/auth/me"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /platform-admin/auth/rotate-api-key",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{platformAdminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/platform-admin/auth/rotate-api-key"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Quarterly key rotation\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Platform Admin",
+      "item": [
+        {
+          "name": "GET /platform-admin/overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-platform-admin-key",
+                "value": "{{platformAdminApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/platform-admin/overview"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"companies\": {\n    \"total\": 42,\n    \"pendingApprovals\": 4\n  },\n  \"subscriptions\": {\n    \"active\": 38\n  },\n  \"payments\": {\n    \"pending\": 6,\n    \"success\": 120,\n    \"failed\": 2\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /platform-admin/companies?page=1&limit=20&search=",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-platform-admin-key",
+                "value": "{{platformAdminApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/platform-admin/companies?page=1&limit=20&search="
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /platform-admin/companies/pending-approvals?page=1&limit=20",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-platform-admin-key",
+                "value": "{{platformAdminApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/platform-admin/companies/pending-approvals?page=1&limit=20"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /platform-admin/companies/cm9v0co0001abc/approval",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-platform-admin-key",
+                "value": "{{platformAdminApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/platform-admin/companies/cm9v0co0001abc/approval"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": true\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"id\": \"cm9v0co0001\",\n  \"name\": \"Builder Pro Demo\",\n  \"slug\": \"builder-pro-demo\",\n  \"isActive\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /platform-admin/subscriptions?page=1&limit=20&search=",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-platform-admin-key",
+                "value": "{{platformAdminApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/platform-admin/subscriptions?page=1&limit=20&search="
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /platform-admin/subscriptions/cm9v0sub0001abc/status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-platform-admin-key",
+                "value": "{{platformAdminApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/platform-admin/subscriptions/cm9v0sub0001abc/status"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /platform-admin/billing/payments?page=1&limit=20&search=",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-platform-admin-key",
+                "value": "{{platformAdminApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/platform-admin/billing/payments?page=1&limit=20&search="
+            }
+          },
+          "response": [
+            {
+              "name": "Sample Success Response",
+              "originalRequest": {},
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"items\": [],\n  \"meta\": {\n    \"page\": 1,\n    \"limit\": 20,\n    \"total\": 0\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

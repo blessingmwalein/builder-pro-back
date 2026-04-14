@@ -1,0 +1,175 @@
+{
+  "info": {
+    "name": "BuilderPro Platform Admin",
+    "description": "Platform admin auth and management endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3005/api/v1"
+    },
+    {
+      "key": "platformAdminEmail",
+      "value": "platform-admin@builderpro.local"
+    },
+    {
+      "key": "platformAdminPassword",
+      "value": "PlatformAdmin123!"
+    },
+    {
+      "key": "platformAdminToken",
+      "value": ""
+    },
+    {
+      "key": "platformAdminApiKey",
+      "value": "change-me-platform-admin-key"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{platformAdminEmail}}\",\n  \"password\": \"{{platformAdminPassword}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/platform-admin/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "platform-admin",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Auth - Me (Bearer)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{platformAdminToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/platform-admin/auth/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "platform-admin",
+            "auth",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Auth - Rotate API Key (Bearer)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{platformAdminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"Quarterly rotation\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/platform-admin/auth/rotate-api-key",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "platform-admin",
+            "auth",
+            "rotate-api-key"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Overview (API Key)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-platform-admin-key",
+            "value": "{{platformAdminApiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/platform-admin/overview",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "platform-admin",
+            "overview"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Companies (Bearer)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{platformAdminToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/platform-admin/companies?page=1&limit=20&search=builder",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "platform-admin",
+            "companies"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "20"
+            },
+            {
+              "key": "search",
+              "value": "builder"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
