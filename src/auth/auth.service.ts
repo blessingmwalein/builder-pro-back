@@ -12,6 +12,7 @@ import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { enforcePlanLimit } from '../common/helpers/plan-limits.helper';
 import { RbacService } from '../rbac/rbac.service';
+import { MailService } from '../mail/mail.service';
 import { AcceptInviteDto } from './dto/accept-invite.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -53,6 +54,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly rbacService: RbacService,
+    private readonly mailService: MailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -342,18 +344,44 @@ export class AuthService {
       },
     });
 
+    let roleName: string | undefined;
     if (dto.roleId) {
       const role = await this.prisma.role.findFirst({
         where: { id: dto.roleId, companyId, deletedAt: null },
-        select: { id: true },
+        select: { id: true, name: true },
       });
 
       if (role) {
+        roleName = role.name;
         await this.prisma.userRole.create({
           data: { companyId, userId: user.id, roleId: role.id },
         });
       }
     }
+
+    // Fire-and-forget — send invite email. mailService handles its own errors.
+    const [company, inviter] = await Promise.all([
+      this.prisma.company.findUnique({
+        where: { id: companyId },
+        select: { name: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: invitedById },
+        select: { firstName: true, lastName: true },
+      }),
+    ]);
+
+    void this.mailService.sendInvite(user.email, {
+      inviteeFirstName: user.firstName,
+      inviteeEmail: user.email,
+      companyName: company?.name ?? 'BuilderPro',
+      inviterName:
+        [inviter?.firstName, inviter?.lastName].filter(Boolean).join(' ').trim() ||
+        'Your teammate',
+      roleName,
+      acceptUrl: this.mailService.buildAcceptInviteUrl(inviteToken),
+      expiresAt: inviteTokenExpiresAt,
+    });
 
     return {
       userId: user.id,
@@ -361,6 +389,59 @@ export class AuthService {
       firstName: user.firstName,
       lastName: user.lastName,
       inviteToken: user.inviteToken,
+      inviteLink: `/auth/accept-invite?token=${inviteToken}`,
+      expiresAt: inviteTokenExpiresAt,
+    };
+  }
+
+  async resendInvite(companyId: string, userId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, companyId, deletedAt: null },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        isActive: true,
+        passwordHash: true,
+        userRoles: { select: { role: { select: { name: true } } }, take: 1 },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.isActive || user.passwordHash) {
+      throw new BadRequestException('User has already accepted their invite');
+    }
+
+    const inviteToken = randomBytes(32).toString('hex');
+    const inviteTokenExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { inviteToken, inviteTokenExpiresAt },
+    });
+
+    const company = await this.prisma.company.findUnique({
+      where: { id: companyId },
+      select: { name: true },
+    });
+
+    void this.mailService.sendInvite(user.email, {
+      inviteeFirstName: user.firstName,
+      inviteeEmail: user.email,
+      companyName: company?.name ?? 'BuilderPro',
+      inviterName: 'Your teammate',
+      roleName: user.userRoles[0]?.role?.name,
+      acceptUrl: this.mailService.buildAcceptInviteUrl(inviteToken),
+      expiresAt: inviteTokenExpiresAt,
+    });
+
+    return {
+      userId: user.id,
+      email: user.email,
+      inviteToken,
       inviteLink: `/auth/accept-invite?token=${inviteToken}`,
       expiresAt: inviteTokenExpiresAt,
     };

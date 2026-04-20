@@ -10,6 +10,7 @@ import { AccountType, PaymentMethod, PaymentStatus, SubscriptionStatus } from '@
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaynowProvider } from '../billing/paynow.provider';
+import { MailService } from '../mail/mail.service';
 import { ActivateSubscriptionDto, BillingCycle } from './dto/activate-subscription.dto';
 import { RegisterCompanyDto } from './dto/register-company.dto';
 
@@ -61,6 +62,7 @@ export class OnboardingService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly paynowProvider: PaynowProvider,
+    private readonly mailService: MailService,
   ) {}
 
   listPlans() {
@@ -95,7 +97,7 @@ export class OnboardingService {
       );
     }
 
-    const planCode = dto.planCode ?? 'STARTER';
+    const planCode = dto.planCode ?? 'SMALL_BUSINESS';
     const platformPlan = await this.prisma.platformPlan.findFirst({
       where: { code: planCode, isActive: true, deletedAt: null },
     });
@@ -196,7 +198,7 @@ export class OnboardingService {
 
       const trialStart = new Date();
       const trialEnd = new Date(trialStart);
-      trialEnd.setDate(trialEnd.getDate() + 30);
+      trialEnd.setDate(trialEnd.getDate() + 14);
 
       const subscription = await tx.subscription.create({
         data: {
@@ -226,6 +228,14 @@ export class OnboardingService {
     const trialDaysLeft = Math.ceil(
       (result.subscription.trialEndsAt!.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
     );
+
+    // Fire-and-forget welcome email.
+    void this.mailService.sendWelcome(result.user.email, {
+      firstName: result.user.firstName,
+      companyName: result.company.name,
+      trialDays: trialDaysLeft,
+      dashboardUrl: this.mailService.buildDashboardUrl(),
+    });
 
     return {
       accessToken,
@@ -267,7 +277,7 @@ export class OnboardingService {
     });
 
     if (!subscription) {
-      const initialPlanCode = dto.planCode ?? 'STARTER';
+      const initialPlanCode = dto.planCode ?? 'SMALL_BUSINESS';
       const initialPlatformPlan = await this.prisma.platformPlan.findFirst({
         where: { code: initialPlanCode, isActive: true, deletedAt: null },
       });
@@ -278,7 +288,7 @@ export class OnboardingService {
 
       const trialStart = new Date();
       const trialEnd = new Date(trialStart);
-      trialEnd.setDate(trialEnd.getDate() + 30);
+      trialEnd.setDate(trialEnd.getDate() + 14);
 
       subscription = await this.prisma.$transaction(async (tx) => {
         const localPlan = await tx.subscriptionPlan.upsert({

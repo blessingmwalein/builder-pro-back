@@ -557,25 +557,36 @@ model Supplier {
 }
 
 model Material {
-  id          String        @id @default(cuid())
-  companyId   String
-  supplierId  String?
-  name        String
-  category    String?
-  sku         String?
-  unit        String
-  unitCost    Decimal       @default(0) @db.Decimal(12, 2)
-  stockOnHand Decimal       @default(0) @db.Decimal(14, 3)
-  reorderAt   Decimal?      @db.Decimal(14, 3)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  deletedAt   DateTime?
-  company     Company       @relation(fields: [companyId], references: [id])
-  supplier    Supplier?     @relation(fields: [supplierId], references: [id])
-  logs        MaterialLog[]
+  id                String        @id @default(cuid())
+  companyId         String
+  supplierId        String?
+  name              String
+  category          String?
+  sku               String?
+  unit              String
+  unitCost          Decimal       @default(0) @db.Decimal(12, 2)
+  stockOnHand       Decimal       @default(0) @db.Decimal(14, 3)
+  reorderAt         Decimal?      @db.Decimal(14, 3)
+  // External datasource (e.g. Electrosales) — populated when a material was
+  // imported from an external catalog so repeated imports dedupe and can
+  // re-sync price.
+  externalSource    String?
+  externalProductId String?
+  externalImageUrl  String?
+  externalCategory  String?
+  lastSyncedAt      DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
+  company           Company       @relation(fields: [companyId], references: [id])
+  supplier          Supplier?     @relation(fields: [supplierId], references: [id])
+  logs              MaterialLog[]
+  quoteLineItems    QuoteLineItem[]
 
   @@unique([companyId, sku])
+  @@unique([companyId, externalSource, externalProductId])
   @@index([companyId, deletedAt])
+  @@index([companyId, externalSource])
 }
 
 model MaterialLog {
@@ -639,23 +650,31 @@ model Quote {
 }
 
 model QuoteLineItem {
-  id          String   @id @default(cuid())
-  companyId   String
-  quoteId     String
-  category    String
-  description String
-  quantity    Decimal  @db.Decimal(14, 3)
-  unit        String?
-  unitPrice   Decimal  @db.Decimal(12, 2)
-  totalPrice  Decimal  @db.Decimal(18, 2)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
-  quote       Quote    @relation(fields: [quoteId], references: [id])
-  company     Company  @relation(fields: [companyId], references: [id])
+  id                String    @id @default(cuid())
+  companyId         String
+  quoteId           String
+  materialId        String?
+  category          String
+  description       String
+  quantity          Decimal   @db.Decimal(14, 3)
+  unit              String?
+  unitPrice         Decimal   @db.Decimal(12, 2)
+  totalPrice        Decimal   @db.Decimal(18, 2)
+  sortOrder         Int       @default(0)
+  // External datasource snapshot (e.g. Electrosales) captured when the line
+  // item was picked from an external catalog. Used to (re-)import / sync
+  // Material on approval or on-demand.
+  externalSource    String?
+  externalProductId String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+  quote             Quote     @relation(fields: [quoteId], references: [id])
+  company           Company   @relation(fields: [companyId], references: [id])
+  material          Material? @relation(fields: [materialId], references: [id])
 
   @@index([companyId, quoteId, deletedAt])
+  @@index([companyId, materialId])
 }
 
 model Variation {

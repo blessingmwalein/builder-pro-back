@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AssignPermissionsDto } from './dto/assign-permissions.dto';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -61,11 +62,8 @@ const ALL_PERMISSION_KEYS = [
 export class RbacService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getUserPermissions(
-    companyId: string,
-    userId: string,
-  ): Promise<string[]> {
-    const roles = await this.prisma.userRole.findMany({
+  private async loadUserRolePermissions(companyId: string, userId: string) {
+    return this.prisma.userRole.findMany({
       where: {
         companyId,
         userId,
@@ -86,6 +84,28 @@ export class RbacService {
         },
       },
     });
+  }
+
+  async getUserPermissions(
+    companyId: string,
+    userId: string,
+  ): Promise<string[]> {
+    let roles;
+    try {
+      roles = await this.loadUserRolePermissions(companyId, userId);
+    } catch (error) {
+      // Recover from transient dropped DB connections and retry once.
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P1017'
+      ) {
+        await this.prisma.$disconnect();
+        await this.prisma.$connect();
+        roles = await this.loadUserRolePermissions(companyId, userId);
+      } else {
+        throw error;
+      }
+    }
 
     const set = new Set<string>();
     for (const roleAssignment of roles) {

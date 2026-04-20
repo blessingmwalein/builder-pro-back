@@ -29,6 +29,8 @@ import { QueueModule } from './queue/queue.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PlatformAdminModule } from './platform-admin/platform-admin.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
+import { MailModule } from './mail/mail.module';
+import { ElectrosalesModule } from './integrations/electrosales/electrosales.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { SubscriptionGuard } from './common/guards/subscription.guard';
@@ -46,6 +48,7 @@ import { SubscriptionGuard } from './common/guards/subscription.guard';
       },
     ]),
     PrismaModule,
+    MailModule,
     TenancyModule,
     AuthModule,
     UsersModule,
@@ -69,6 +72,7 @@ import { SubscriptionGuard } from './common/guards/subscription.guard';
     QueueModule,
     PlatformAdminModule,
     OnboardingModule,
+    ElectrosalesModule,
   ],
   controllers: [AppController],
   providers: [

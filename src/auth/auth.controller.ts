@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -62,6 +63,16 @@ export class AuthController {
     @Body() dto: InviteUserDto,
   ) {
     return this.authService.inviteUser(tenant.companyId, user.userId, dto);
+  }
+
+  @Permissions('employees.*', 'settings.*')
+  @Post('invite/:userId/resend')
+  @ApiOperation({ summary: 'Resend an invite to a pending user' })
+  resendInvite(
+    @Tenant() tenant: RequestTenant,
+    @Param('userId') userId: string,
+  ) {
+    return this.authService.resendInvite(tenant.companyId, userId);
   }
 
   @Public()

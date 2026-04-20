@@ -30,9 +30,9 @@ export class OnboardingController {
   @ApiOperation({
     summary: 'Register a new company / individual account',
     description:
-      'Creates the company, owner user, default roles/permissions and a 30-day free trial subscription. ' +
+      'Creates the company, owner user, default roles/permissions and a 14-day free trial subscription. ' +
       'Returns an access token so the user can start immediately. ' +
-      'Pass planCode from GET /onboarding/plans to pre-select a plan (defaults to STARTER).',
+      'Pass planCode from GET /onboarding/plans to pre-select a plan (defaults to SMALL_BUSINESS).',
   })
   register(@Body() dto: RegisterCompanyDto) {
     return this.onboardingService.registerCompany(dto);
@@ -64,7 +64,6 @@ export class OnboardingController {
     summary: 'Activate subscription (end trial and pay)',
     description:
       'Initiates payment via PayNow/EcoCash to activate the subscription. ' +
-      'Free plans (STARTER) activate immediately. ' +
       'Paid plans return a paymentUrl to redirect the user to the payment gateway.',
   })
   activateSubscription(

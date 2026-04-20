@@ -6,20 +6,83 @@ import {
 import { QuoteStatus, VariationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import {
+  ElectrosalesService,
+  ELECTROSALES_SOURCE,
+} from '../integrations/electrosales/electrosales.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { CreateVariationDto } from './dto/create-variation.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 
+type QuoteLineItemInput = {
+  category: string;
+  description: string;
+  quantity: number;
+  unit?: string;
+  unitPrice: number;
+  materialId?: string;
+  externalSource?: string;
+  externalProductId?: string;
+  // Allow the frontend to ship the full Electrosales product so we can
+  // back-fill Material catalog without a second network hop.
+  externalProduct?: {
+    id: number;
+    name: string;
+    sku: string;
+    price: number;
+    priceExclVat: number;
+    availability: string;
+    supplierName: string;
+    description: string;
+    breadcrumbs: string[];
+    imageUrl: string | null;
+  };
+};
+
 @Injectable()
 export class QuotesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly electrosales: ElectrosalesService,
+  ) {}
 
   async create(companyId: string, dto: CreateQuoteDto) {
     const quoteNumber = await this.generateQuoteNumber(companyId);
+    const lineItems = (dto.lineItems as unknown as QuoteLineItemInput[]) ?? [];
     const { subtotal, taxAmount, totalAmount } = this.calculateTotals(
-      dto.lineItems,
+      lineItems,
       (dto as any).taxRate ?? 0,
       (dto as any).discountAmount ?? 0,
+    );
+
+    // Resolve / upsert Materials for any Electrosales-sourced line items
+    // BEFORE creating the quote, so QuoteLineItem.materialId can link.
+    const resolvedLineItems = await Promise.all(
+      lineItems.map(async (item) => {
+        let materialId = item.materialId;
+
+        // If the line item carries an Electrosales product payload, import it
+        // as a Material (idempotent) and attach the id.
+        if (!materialId && item.externalProduct) {
+          const imported = await this.electrosales.importAsMaterial(
+            companyId,
+            item.externalProduct,
+          );
+          materialId = imported.id;
+        } else if (
+          !materialId &&
+          item.externalSource === ELECTROSALES_SOURCE &&
+          item.externalProductId
+        ) {
+          const imported = await this.electrosales.importByExternalId(
+            companyId,
+            item.externalProductId,
+          );
+          materialId = imported.id;
+        }
+
+        return { ...item, materialId };
+      }),
     );
 
     return this.prisma.quote.create({
@@ -40,15 +103,20 @@ export class QuotesService {
         taxAmount,
         totalAmount,
         lineItems: {
-          create: dto.lineItems.map((item, i) => ({
+          create: resolvedLineItems.map((item, i) => ({
             companyId,
             category: item.category,
             description: item.description,
             quantity: item.quantity,
-            unit: (item as any).unit,
+            unit: item.unit,
             unitPrice: item.unitPrice,
             totalPrice: item.quantity * item.unitPrice,
             sortOrder: i,
+            // Cast to any so this compiles before `prisma generate` picks up
+            // the new fields (schema already has them).
+            ...({ materialId: item.materialId ?? null,
+                  externalSource: item.externalSource ?? null,
+                  externalProductId: item.externalProductId ?? null } as any),
           })),
         },
       },
@@ -195,7 +263,23 @@ export class QuotesService {
   async approve(companyId: string, id: string) {
     const quote = await this.prisma.quote.findFirst({
       where: { id, companyId, deletedAt: null },
-      select: { id: true, status: true },
+      select: {
+        id: true,
+        status: true,
+        projectId: true,
+        lineItems: {
+          where: { deletedAt: null },
+          select: {
+            id: true,
+            quantity: true,
+            unitPrice: true,
+            description: true,
+            // Cast avoids lag between schema and generated client — fields
+            // exist in schema.prisma already.
+            ...({ materialId: true } as any),
+          },
+        },
+      },
     });
 
     if (!quote) throw new NotFoundException('Quote not found');
@@ -203,10 +287,69 @@ export class QuotesService {
       throw new BadRequestException('Only sent quotes can be approved');
     }
 
-    return this.prisma.quote.update({
+    const updated = await this.prisma.quote.update({
       where: { id },
       data: { status: QuoteStatus.APPROVED, approvedAt: new Date() },
     });
+
+    // If the quote is tied to a project, record material usage for every
+    // linked material. This keeps Project > Financials > Material Cost in
+    // sync with what was actually quoted + approved.
+    await this.logMaterialUsageFromQuote(companyId, quote as unknown as {
+      projectId: string | null;
+      lineItems: Array<{
+        id: string;
+        quantity: unknown;
+        unitPrice: unknown;
+        description: string;
+        materialId?: string | null;
+      }>;
+    }, id);
+
+    return updated;
+  }
+
+  private async logMaterialUsageFromQuote(
+    companyId: string,
+    quote: {
+      projectId: string | null;
+      lineItems: Array<{
+        id: string;
+        quantity: unknown;
+        unitPrice: unknown;
+        description: string;
+        materialId?: string | null;
+      }>;
+    },
+    quoteId: string,
+  ) {
+    if (!quote.projectId) return;
+
+    const logs = quote.lineItems
+      .filter((li) => !!li.materialId)
+      .map((li) => {
+        const quantity = Number(li.quantity);
+        const unitCost = Number(li.unitPrice);
+        return {
+          companyId,
+          projectId: quote.projectId!,
+          materialId: li.materialId as string,
+          quantity,
+          unitCost,
+          totalCost: quantity * unitCost,
+          usedAt: new Date(),
+          notes: `Auto-logged from approved quote ${quoteId}: ${li.description}`,
+        };
+      });
+
+    if (logs.length === 0) return;
+    try {
+      await (this.prisma as any).materialLog.createMany({ data: logs });
+    } catch (err) {
+      // Non-fatal — surface via logs but don't block approval.
+      // eslint-disable-next-line no-console
+      console.error('Failed to auto-log material usage', err);
+    }
   }
 
   async reject(companyId: string, id: string, rejectionNotes?: string) {

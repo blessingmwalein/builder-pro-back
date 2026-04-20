@@ -2,6 +2,7 @@ import {
   IsArray,
   IsDateString,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   ValidateNested,
@@ -30,6 +31,47 @@ class QuoteLineItemDto {
   @IsOptional()
   @IsString()
   unit?: string;
+
+  @ApiPropertyOptional({
+    example: 'cm9vmat00001abc',
+    description:
+      'Link this line item to an existing Material in the tenant catalog. ' +
+      'If provided, material usage will be logged against the project when the ' +
+      'quote is approved.',
+  })
+  @IsOptional()
+  @IsString()
+  materialId?: string;
+
+  @ApiPropertyOptional({ example: 'electrosales' })
+  @IsOptional()
+  @IsString()
+  externalSource?: string;
+
+  @ApiPropertyOptional({ example: '6962' })
+  @IsOptional()
+  @IsString()
+  externalProductId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Full Electrosales product payload. If provided, the backend will upsert ' +
+      'a Material row for the tenant from this snapshot (no extra network hop).',
+  })
+  @IsOptional()
+  @IsObject()
+  externalProduct?: {
+    id: number;
+    name: string;
+    sku: string;
+    price: number;
+    priceExclVat: number;
+    availability: string;
+    supplierName: string;
+    description: string;
+    breadcrumbs: string[];
+    imageUrl: string | null;
+  };
 }
 
 export class CreateQuoteDto {

@@ -57,7 +57,7 @@ export class RegisterCompanyDto {
 
   @ApiPropertyOptional({
     example: 'SMALL_BUSINESS',
-    description: 'Platform plan code. Defaults to STARTER (free 30-day trial).',
+    description: 'Platform plan code. Defaults to SMALL_BUSINESS (14-day free trial).',
   })
   @IsOptional()
   @IsString()
