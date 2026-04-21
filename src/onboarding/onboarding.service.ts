@@ -55,6 +55,72 @@ const SYSTEM_ROLES = [
   },
 ];
 
+// Default material categories every tenant gets on signup. Codes stay stable
+// so the frontend can reference them programmatically.
+export const DEFAULT_MATERIAL_CATEGORIES = [
+  { code: 'ELECTRICAL', name: 'Electrical', description: 'Cables, fittings, switches, conduits.' },
+  { code: 'PLUMBING', name: 'Plumbing', description: 'Pipes, fittings, valves, sanitaryware.' },
+  { code: 'CEMENT_CONCRETE', name: 'Cement & Concrete', description: 'Cement, aggregates, concrete mixes.' },
+  { code: 'STEEL', name: 'Steel & Reinforcement', description: 'Rebar, mesh, angle iron.' },
+  { code: 'TOOLS', name: 'Tools & Hardware', description: 'Hand tools, power tools, fasteners.' },
+  { code: 'PAINTS', name: 'Paints & Finishes', description: 'Paints, primers, sealants.' },
+  { code: 'ROOFING', name: 'Roofing', description: 'IBR sheets, trusses, gutters.' },
+  { code: 'DOORS_WINDOWS', name: 'Doors & Windows', description: 'Frames, panels, glass.' },
+  { code: 'TIMBER', name: 'Timber', description: 'Formwork, shuttering, framing.' },
+  { code: 'CONSUMABLES', name: 'Consumables', description: 'PPE, fuel, cleaning, misc.' },
+] as const;
+
+// Pre-seeded Zimbabwe hardware suppliers — commonly used as starting point.
+export const DEFAULT_SUPPLIERS = [
+  {
+    name: 'Electrosales',
+    email: 'info@electrosales.co.zw',
+    phone: '+263 24 2772801',
+    website: 'https://www.electrosales.co.zw',
+    address: 'Harare, Zimbabwe',
+    notes: 'Electrical, tools, plumbing, hardware — live catalog integrated.',
+    categories: 'ELECTRICAL,TOOLS,PLUMBING,CONSUMABLES',
+  },
+  {
+    name: 'Halsteds',
+    email: 'info@halsteds.co.zw',
+    phone: '+263 24 2793981',
+    website: 'https://halsteds.co.zw',
+    address: 'Harare, Zimbabwe',
+    notes: 'Building materials, hardware, paints and finishes.',
+    categories: 'CEMENT_CONCRETE,TOOLS,PAINTS,ROOFING,TIMBER',
+  },
+  {
+    name: 'Bhola Hardware',
+    email: 'sales@bholahardware.co.zw',
+    phone: '+263 24 2744015',
+    address: 'Harare, Zimbabwe',
+    notes: 'Cement, steel, doors and windows, general building supplies.',
+    categories: 'CEMENT_CONCRETE,STEEL,DOORS_WINDOWS,ROOFING',
+  },
+] as const;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function seedDefaultMaterialCategories(tx: any, companyId: string) {
+  await tx.materialCategory.createMany({
+    data: DEFAULT_MATERIAL_CATEGORIES.map((c) => ({
+      companyId,
+      code: c.code,
+      name: c.name,
+      description: c.description,
+    })),
+    skipDuplicates: true,
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function seedDefaultSuppliers(tx: any, companyId: string) {
+  await tx.supplier.createMany({
+    data: DEFAULT_SUPPLIERS.map((s) => ({ companyId, ...s })),
+    skipDuplicates: true,
+  });
+}
+
 @Injectable()
 export class OnboardingService {
   constructor(
@@ -212,6 +278,11 @@ export class OnboardingService {
           trialEndsAt: trialEnd,
         },
       });
+
+      // Seed the tenant with sensible defaults so they can start quoting /
+      // logging materials immediately.
+      await seedDefaultMaterialCategories(tx, company.id);
+      await seedDefaultSuppliers(tx, company.id);
 
       return { company, user, subscription, platformPlan };
     }, {

@@ -37,7 +37,13 @@ export class MaterialsController {
   @ApiOperation({ summary: 'List materials in catalog' })
   list(
     @Tenant() tenant: RequestTenant,
-    @Query() query: PaginationQueryDto & { search?: string; lowStock?: boolean },
+    @Query()
+    query: PaginationQueryDto & {
+      search?: string;
+      lowStock?: boolean;
+      categoryId?: string;
+      supplierId?: string;
+    },
   ) {
     return this.materialsService.list(tenant.companyId, query);
   }
@@ -122,5 +128,66 @@ export class MaterialsController {
   @ApiOperation({ summary: 'Delete supplier' })
   deleteSupplier(@Tenant() tenant: RequestTenant, @Param('id') id: string) {
     return this.materialsService.deleteSupplier(tenant.companyId, id);
+  }
+
+  // Categories
+  @Permissions('materials.*', 'materials.log')
+  @Get('categories/list')
+  @ApiOperation({
+    summary: 'List material categories (auto-seeds defaults for the tenant)',
+  })
+  listCategories(@Tenant() tenant: RequestTenant) {
+    return this.materialsService.listCategories(tenant.companyId);
+  }
+
+  @Permissions('materials.*', 'materials.manage_inventory')
+  @Post('categories')
+  @ApiOperation({ summary: 'Create a new material category for this tenant' })
+  createCategory(
+    @Tenant() tenant: RequestTenant,
+    @Body() dto: { code: string; name: string; description?: string },
+  ) {
+    return this.materialsService.createCategory(tenant.companyId, dto);
+  }
+
+  // Bulk purchases
+  @Permissions('materials.*', 'materials.manage_inventory')
+  @Post('purchases')
+  @ApiOperation({
+    summary: 'Record a bulk material purchase (multiple line items, one supplier receipt)',
+    description:
+      'Creates one MaterialPurchase + one MaterialLog per item (entryType=PURCHASE), ' +
+      'increments stock, and optionally records a FinancialTransaction against the project.',
+  })
+  createPurchase(
+    @Tenant() tenant: RequestTenant,
+    @Body()
+    dto: {
+      supplierId?: string;
+      projectId?: string;
+      purchaseNumber?: string;
+      purchasedAt?: string;
+      notes?: string;
+      receiptKey?: string;
+      receiptUrl?: string;
+      items: Array<{
+        materialId: string;
+        quantity: number;
+        unitCost: number;
+        description?: string;
+      }>;
+    },
+  ) {
+    return this.materialsService.createPurchase(tenant.companyId, dto);
+  }
+
+  @Permissions('materials.*', 'materials.log')
+  @Get('purchases/list')
+  @ApiOperation({ summary: 'List bulk material purchases' })
+  listPurchases(
+    @Tenant() tenant: RequestTenant,
+    @Query() query: PaginationQueryDto & { projectId?: string; supplierId?: string },
+  ) {
+    return this.materialsService.listPurchases(tenant.companyId, query);
   }
 }

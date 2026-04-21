@@ -492,6 +492,185 @@ export class ProjectsService {
     return { success: true };
   }
 
+  /**
+   * Build a closure-analytics snapshot for a project without persisting it.
+   * Used by both the preview endpoint and `closeProject`. Returns budget vs
+   * actual, material breakdown by category, labour breakdown by employee,
+   * and profit/loss (invoiced revenue - actual cost).
+   */
+  async buildClosureSummary(companyId: string, projectId: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id: projectId, companyId, deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        baselineBudget: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+        actualEndDate: true,
+      },
+    });
+    if (!project) throw new NotFoundException('Project not found');
+
+    const [budgets, materialLogs, timeEntries, invoices] = await Promise.all([
+      this.prisma.budget.findMany({
+        where: { companyId, projectId, deletedAt: null },
+        include: { category: { select: { code: true, name: true } } },
+      }),
+      this.prisma.materialLog.findMany({
+        where: { companyId, projectId, deletedAt: null },
+        include: {
+          material: { select: { id: true, name: true, unit: true } },
+        },
+      }),
+      this.prisma.timeEntry.findMany({
+        where: { companyId, projectId, deletedAt: null },
+        include: {
+          worker: { select: { id: true, firstName: true, lastName: true } },
+        },
+      }),
+      this.prisma.invoice.findMany({
+        where: { companyId, projectId, deletedAt: null },
+        select: { totalAmount: true, paidAmount: true, balanceAmount: true, status: true },
+      }),
+    ]);
+
+    // Per-material breakdown
+    const materialByName = new Map<
+      string,
+      { name: string; unit: string; quantityUsed: number; totalCost: number }
+    >();
+    let materialCostTotal = 0;
+    for (const log of materialLogs) {
+      const signedQty = log.entryType === 'PURCHASE' ? 0 : Number(log.quantity);
+      const signedCost = log.entryType === 'PURCHASE' ? 0 : Number(log.totalCost);
+      const key = log.material?.name ?? log.materialId;
+      const existing = materialByName.get(key);
+      if (existing) {
+        existing.quantityUsed += signedQty;
+        existing.totalCost += signedCost;
+      } else {
+        materialByName.set(key, {
+          name: key,
+          unit: log.material?.unit ?? 'unit',
+          quantityUsed: signedQty,
+          totalCost: signedCost,
+        });
+      }
+      materialCostTotal += signedCost;
+    }
+
+    // Per-employee labour breakdown
+    const labourByUser = new Map<
+      string,
+      { name: string; hours: number; labourCost: number }
+    >();
+    let labourCostTotal = 0;
+    let totalHours = 0;
+    for (const entry of timeEntries) {
+      const hours = Number(entry.regularHours || 0) + Number(entry.overtimeHours || 0);
+      const cost = Number(entry.labourCost || 0);
+      const name = entry.worker
+        ? `${entry.worker.firstName} ${entry.worker.lastName}`.trim()
+        : 'Unknown';
+      const key = entry.workerId;
+      const existing = labourByUser.get(key);
+      if (existing) {
+        existing.hours += hours;
+        existing.labourCost += cost;
+      } else {
+        labourByUser.set(key, { name, hours, labourCost: cost });
+      }
+      labourCostTotal += cost;
+      totalHours += hours;
+    }
+
+    // Budget vs actual by category
+    const budgetLines = budgets.map((b) => {
+      const planned = Number(b.plannedAmount);
+      const actual = Number(b.actualAmount);
+      return {
+        categoryCode: b.category?.code ?? 'UNCATEGORIZED',
+        categoryName: b.category?.name ?? 'Uncategorized',
+        plannedAmount: planned,
+        actualAmount: actual,
+        variance: planned - actual,
+        overBudget: actual > planned,
+      };
+    });
+
+    const plannedTotal = budgetLines.reduce((s, l) => s + l.plannedAmount, 0);
+    const budgetActualTotal = budgetLines.reduce((s, l) => s + l.actualAmount, 0);
+    const actualCostTotal = Math.max(
+      budgetActualTotal,
+      materialCostTotal + labourCostTotal,
+    );
+
+    const revenueInvoiced = invoices.reduce((s, i) => s + Number(i.totalAmount), 0);
+    const revenueCollected = invoices.reduce((s, i) => s + Number(i.paidAmount), 0);
+    const outstanding = invoices.reduce((s, i) => s + Number(i.balanceAmount), 0);
+    const profit = revenueInvoiced - actualCostTotal;
+
+    return {
+      project: {
+        id: project.id,
+        name: project.name,
+        code: project.code,
+        status: project.status,
+        startDate: project.startDate,
+        endDate: project.endDate,
+      },
+      totals: {
+        baselineBudget: Number(project.baselineBudget),
+        plannedBudget: plannedTotal,
+        actualCost: actualCostTotal,
+        variance: plannedTotal - actualCostTotal,
+        materialCost: materialCostTotal,
+        labourCost: labourCostTotal,
+        revenueInvoiced,
+        revenueCollected,
+        outstanding,
+        profit,
+        profitMarginPct:
+          revenueInvoiced > 0 ? Math.round((profit / revenueInvoiced) * 100) : 0,
+      },
+      budgetLines,
+      materials: Array.from(materialByName.values()).sort(
+        (a, b) => b.totalCost - a.totalCost,
+      ),
+      labour: {
+        totalHours,
+        perEmployee: Array.from(labourByUser.values()).sort(
+          (a, b) => b.labourCost - a.labourCost,
+        ),
+      },
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  async closeProject(companyId: string, projectId: string, notes?: string) {
+    const summary = await this.buildClosureSummary(companyId, projectId);
+
+    const closedAt = new Date();
+    const closureSummary = { ...summary, closureNotes: notes ?? null };
+
+    const updated = await (this.prisma.project.update({
+      where: { id: projectId },
+      data: {
+        status: 'COMPLETED' as any,
+        actualEndDate: closedAt,
+        completionPercent: 100,
+        // Cast until prisma generate picks up the schema change.
+        closedAt,
+        closureSummary: closureSummary as any,
+      } as any,
+    }) as unknown as Promise<{ id: string }>);
+
+    return { success: true, project: updated, summary: closureSummary };
+  }
+
   async addMember(companyId: string, projectId: string, dto: AddProjectMemberDto) {
     const project = await this.prisma.project.findFirst({
       where: { id: projectId, companyId, deletedAt: null },

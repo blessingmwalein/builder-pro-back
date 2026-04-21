@@ -5,9 +5,53 @@ import { CreateBudgetCategoryDto } from './dto/create-budget-category.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { SetProjectBudgetDto } from './dto/set-project-budget.dto';
 
+/**
+ * Default construction-industry budget categories we ensure every company has.
+ * Seeded lazily the first time `listBudgetCategories` or `createTransaction`
+ * is called, so existing tenants automatically gain P&Gs, Contingency and
+ * Unexpected Expenses without a data migration.
+ *
+ * `code` is the stable identifier — safe to reference from the frontend for
+ * things like the "Record Unexpected Cost" quick action.
+ */
+export const DEFAULT_BUDGET_CATEGORIES = [
+  { code: 'LABOUR', name: 'Labour' },
+  { code: 'MATERIALS', name: 'Materials' },
+  { code: 'EQUIPMENT', name: 'Equipment' },
+  { code: 'SUBCONTRACTORS', name: 'Subcontractors' },
+  { code: 'P_AND_GS', name: 'Preliminary & Generals (P&Gs)' },
+  { code: 'CONTINGENCY', name: 'Contingency' },
+  { code: 'UNEXPECTED', name: 'Unexpected Expenses' },
+  { code: 'OVERHEADS', name: 'Overheads' },
+] as const;
+
 @Injectable()
 export class FinancialsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Idempotent: inserts any missing default categories for the tenant.
+   * Safe to call on every list/create request.
+   */
+  private async ensureDefaultBudgetCategories(companyId: string) {
+    const existing = await this.prisma.budgetCategory.findMany({
+      where: { companyId, deletedAt: null },
+      select: { code: true },
+    });
+    const existingCodes = new Set(existing.map((c) => c.code));
+    const missing = DEFAULT_BUDGET_CATEGORIES.filter(
+      (c) => !existingCodes.has(c.code),
+    );
+    if (missing.length === 0) return;
+    await this.prisma.budgetCategory.createMany({
+      data: missing.map((c) => ({
+        companyId,
+        code: c.code,
+        name: c.name,
+      })),
+      skipDuplicates: true,
+    });
+  }
 
   async summary(companyId: string, projectId?: string) {
     const projectFilter = projectId ? { projectId } : {};
@@ -255,6 +299,7 @@ export class FinancialsService {
   }
 
   async listBudgetCategories(companyId: string) {
+    await this.ensureDefaultBudgetCategories(companyId);
     return this.prisma.budgetCategory.findMany({
       where: { companyId, deletedAt: null },
       orderBy: { name: 'asc' },

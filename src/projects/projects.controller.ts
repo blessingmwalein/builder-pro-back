@@ -71,6 +71,34 @@ export class ProjectsController {
   }
 
   @Permissions('projects.*')
+  @Get(':id/closure-preview')
+  @ApiOperation({
+    summary: 'Preview project closure analytics without persisting',
+    description:
+      'Computes the same cost/budget/labour/materials breakdown that closeProject ' +
+      'would freeze. Safe to call before the user confirms closure.',
+  })
+  closurePreview(@Tenant() tenant: RequestTenant, @Param('id') id: string) {
+    return this.projectsService.buildClosureSummary(tenant.companyId, id);
+  }
+
+  @Permissions('projects.*')
+  @Post(':id/close')
+  @ApiOperation({
+    summary: 'Close (complete) a project and snapshot its final analytics',
+    description:
+      'Sets status=COMPLETED, closedAt=now, and writes a JSON snapshot with total ' +
+      'cost vs budget, material-usage breakdown, labour breakdown, and P/L.',
+  })
+  close(
+    @Tenant() tenant: RequestTenant,
+    @Param('id') id: string,
+    @Body() body: { notes?: string } = {},
+  ) {
+    return this.projectsService.closeProject(tenant.companyId, id, body.notes);
+  }
+
+  @Permissions('projects.*')
   @Get(':id/members')
   @ApiOperation({ summary: 'List project team members' })
   listMembers(@Tenant() tenant: RequestTenant, @Param('id') id: string) {

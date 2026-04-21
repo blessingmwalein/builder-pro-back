@@ -196,6 +196,8 @@ model Company {
   timeEntries           TimeEntry[]
   materials             Material[]
   materialLogs          MaterialLog[]
+  materialCategories    MaterialCategory[]
+  materialPurchases     MaterialPurchase[]
   suppliers             Supplier[]
   quotes                Quote[]
   quoteLineItems        QuoteLineItem[]
@@ -355,6 +357,10 @@ model Project {
   actualCost         Decimal          @default(0) @db.Decimal(18, 2)
   completionPercent  Int              @default(0)
   isArchived         Boolean          @default(false)
+  // Closure metadata — set when a project is marked COMPLETED and a final
+  // cost/profit snapshot is generated.
+  closedAt           DateTime?
+  closureSummary     Json?
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
   deletedAt          DateTime?
@@ -372,6 +378,7 @@ model Project {
   conversations      Conversation[]
   documents          Document[]
   members            ProjectMember[]
+  materialPurchases  MaterialPurchase[]
 
   @@unique([companyId, code])
   @@index([companyId, status, deletedAt])
@@ -537,36 +544,93 @@ model TimeEntry {
 }
 
 model Supplier {
-  id         String       @id @default(cuid())
-  companyId  String
-  name       String
-  email      String?
-  phone      String?
-  address    String?
-  website    String?
-  notes      String?
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  deletedAt  DateTime?
-  company    Company      @relation(fields: [companyId], references: [id])
-  materials  Material[]
+  id          String        @id @default(cuid())
+  companyId   String
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  website     String?
+  notes       String?
+  // Comma-separated list of category codes this supplier covers
+  // (kept loose to avoid a join table for now).
+  categories  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+  company     Company       @relation(fields: [companyId], references: [id])
+  materials   Material[]
   materialLogs MaterialLog[]
+  purchases   MaterialPurchase[]
 
   @@unique([companyId, name])
   @@index([companyId, deletedAt])
+}
+
+/**
+ * Per-tenant material categories (Electrical, Plumbing, Cement, etc.).
+ * Kept as a proper model so each company can curate its own list while
+ * defaults are seeded idempotently by FinancialsService / MaterialsService.
+ */
+model MaterialCategory {
+  id         String     @id @default(cuid())
+  companyId  String
+  code       String
+  name       String
+  description String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deletedAt  DateTime?
+  company    Company    @relation(fields: [companyId], references: [id])
+  materials  Material[]
+
+  @@unique([companyId, code])
+  @@index([companyId, deletedAt])
+}
+
+/**
+ * A single bulk-purchase event — one receipt from one supplier covering
+ * one or more MaterialLog rows. Each line item on this purchase becomes a
+ * MaterialLog (and optionally a FinancialTransaction). Receipt uploads are
+ * attached here rather than on individual lines.
+ */
+model MaterialPurchase {
+  id            String        @id @default(cuid())
+  companyId     String
+  supplierId    String?
+  projectId     String?
+  purchaseNumber String?
+  purchasedAt   DateTime
+  totalAmount   Decimal       @default(0) @db.Decimal(18, 2)
+  notes         String?
+  receiptKey    String?
+  receiptUrl    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+  company       Company       @relation(fields: [companyId], references: [id])
+  supplier      Supplier?     @relation(fields: [supplierId], references: [id])
+  project       Project?      @relation(fields: [projectId], references: [id])
+  logs          MaterialLog[]
+
+  @@index([companyId, purchasedAt])
+  @@index([companyId, supplierId])
 }
 
 model Material {
   id                String        @id @default(cuid())
   companyId         String
   supplierId        String?
+  categoryId        String?
   name              String
+  // Legacy freeform category string — kept for back-compat; prefer categoryId.
   category          String?
   sku               String?
   unit              String
   unitCost          Decimal       @default(0) @db.Decimal(12, 2)
   stockOnHand       Decimal       @default(0) @db.Decimal(14, 3)
   reorderAt         Decimal?      @db.Decimal(14, 3)
+  description       String?
   // External datasource (e.g. Electrosales) — populated when a material was
   // imported from an external catalog so repeated imports dedupe and can
   // re-sync price.
@@ -580,6 +644,7 @@ model Material {
   deletedAt         DateTime?
   company           Company       @relation(fields: [companyId], references: [id])
   supplier          Supplier?     @relation(fields: [supplierId], references: [id])
+  categoryRef       MaterialCategory? @relation(fields: [categoryId], references: [id])
   logs              MaterialLog[]
   quoteLineItems    QuoteLineItem[]
 
@@ -587,6 +652,7 @@ model Material {
   @@unique([companyId, externalSource, externalProductId])
   @@index([companyId, deletedAt])
   @@index([companyId, externalSource])
+  @@index([companyId, categoryId])
 }
 
 model MaterialLog {
@@ -596,12 +662,16 @@ model MaterialLog {
   taskId      String?
   materialId  String
   supplierId  String?
+  purchaseId  String?
   quantity    Decimal  @db.Decimal(14, 3)
   unitCost    Decimal  @db.Decimal(12, 2)
   totalCost   Decimal  @db.Decimal(18, 2)
+  // PURCHASE = stock coming IN, USAGE = stock going OUT (default).
+  entryType   String   @default("USAGE")
   usedAt      DateTime
   notes       String?
   receiptKey  String?
+  receiptUrl  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?
@@ -609,8 +679,10 @@ model MaterialLog {
   project     Project  @relation(fields: [projectId], references: [id])
   material    Material @relation(fields: [materialId], references: [id])
   supplier    Supplier? @relation(fields: [supplierId], references: [id])
+  purchase    MaterialPurchase? @relation(fields: [purchaseId], references: [id])
 
   @@index([companyId, projectId, usedAt])
+  @@index([companyId, purchaseId])
 }
 
 model Quote {
@@ -849,6 +921,9 @@ model FinancialTransaction {
   occurredAt   DateTime
   sourceType   String
   sourceId     String?
+  // Proof-of-purchase (receipts, invoices, etc).
+  receiptKey   String?
+  receiptUrl   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?

@@ -38,4 +38,20 @@ export class UpdateMaterialDto {
   @IsOptional()
   @IsString()
   supplierId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  stockOnHand?: number;
 }
