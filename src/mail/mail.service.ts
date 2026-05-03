@@ -5,9 +5,10 @@ import type { Transporter } from 'nodemailer';
 import {
   renderWelcomeEmail,
   type WelcomeEmailInput,
-  type RenderedEmail,
 } from './templates/welcome';
+import { type RenderedEmail } from './templates/layout';
 import { renderInviteEmail, type InviteEmailInput } from './templates/invite';
+import { renderPasswordResetEmail, type PasswordResetEmailInput } from './templates/password-reset';
 
 interface MailConfig {
   host: string;
@@ -117,6 +118,15 @@ export class MailService implements OnModuleInit {
 
   async sendInvite(to: string, payload: Omit<InviteEmailInput, 'brandName' | 'appUrl'>) {
     const rendered = renderInviteEmail({
+      ...payload,
+      brandName: this.config.fromName,
+      appUrl: this.config.appUrl,
+    });
+    await this.sendRendered(to, rendered);
+  }
+
+  async sendPasswordResetOtp(to: string, payload: Omit<PasswordResetEmailInput, 'brandName' | 'appUrl'>) {
+    const rendered = renderPasswordResetEmail({
       ...payload,
       brandName: this.config.fromName,
       appUrl: this.config.appUrl,

@@ -17,6 +17,8 @@ import { AcceptInviteDto } from './dto/accept-invite.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 interface TokenPayload {
   sub: string;
@@ -480,6 +482,124 @@ export class AuthService {
     });
 
     return this.issueTokenPair(updated.id, updated.companyId, updated.email);
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const normalizedEmail = dto.email.toLowerCase().trim();
+    let user: any = null;
+
+    if (dto.companySlug) {
+      const company = await this.prisma.company.findFirst({
+        where: { slug: dto.companySlug, deletedAt: null },
+      });
+      if (company) {
+        user = await this.prisma.user.findFirst({
+          where: { companyId: company.id, email: normalizedEmail, deletedAt: null },
+        });
+      }
+    } else {
+      const users = await this.prisma.user.findMany({
+        where: {
+          email: normalizedEmail,
+          deletedAt: null,
+          company: { isActive: true, deletedAt: null },
+        },
+        take: 2,
+      });
+
+      if (users.length === 1) {
+        user = users[0];
+      } else if (users.length > 1) {
+        throw new BadRequestException(
+          'Multiple accounts found for this email. Please provide your company slug.',
+        );
+      }
+    }
+
+    // Always return success to prevent email enumeration
+    if (!user || !user.isActive) {
+      return {
+        message: 'If an account exists, a password reset code has been sent to your email.',
+      };
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetOtp: otp,
+        resetOtpExpiresAt: expiresAt,
+      },
+    });
+
+    void this.mailService.sendPasswordResetOtp(user.email, {
+      firstName: user.firstName,
+      otp,
+    });
+
+    return {
+      message: 'If an account exists, a password reset code has been sent to your email.',
+    };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const normalizedEmail = dto.email.toLowerCase().trim();
+    let user: any = null;
+
+    if (dto.companySlug) {
+      const company = await this.prisma.company.findFirst({
+        where: { slug: dto.companySlug, deletedAt: null },
+      });
+      if (company) {
+        user = await this.prisma.user.findFirst({
+          where: { companyId: company.id, email: normalizedEmail, deletedAt: null },
+        });
+      }
+    } else {
+      const users = await this.prisma.user.findMany({
+        where: {
+          email: normalizedEmail,
+          deletedAt: null,
+          company: { isActive: true, deletedAt: null },
+        },
+        take: 2,
+      });
+
+      if (users.length === 1) {
+        user = users[0];
+      } else if (users.length > 1) {
+        throw new BadRequestException(
+          'Multiple accounts found for this email. Please provide your company slug.',
+        );
+      }
+    }
+
+    if (
+      !user ||
+      !user.isActive ||
+      !user.resetOtp ||
+      user.resetOtp !== dto.otp ||
+      !user.resetOtpExpiresAt ||
+      user.resetOtpExpiresAt < new Date()
+    ) {
+      throw new BadRequestException('Invalid or expired reset code');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 12);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        resetOtp: null,
+        resetOtpExpiresAt: null,
+        refreshTokenHash: null, // Invalidate existing sessions for security
+      },
+    });
+
+    return { message: 'Your password has been reset successfully.' };
   }
 
   private async issueTokenPair(userId: string, companyId: string, email: string) {

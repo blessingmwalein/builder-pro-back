@@ -19,6 +19,7 @@ export class TenancyMiddleware implements NestMiddleware {
     const disableTenantValidation =
       String(process.env.DISABLE_TENANT_VALIDATION ?? 'true').toLowerCase() === 'true';
 
+
     const ignoredPrefixes = ['/api/docs', '/api-json', '/api/v1/platform-admin'];
     const ignoredPaths = [
       '/onboarding/register',
@@ -29,6 +30,8 @@ export class TenancyMiddleware implements NestMiddleware {
       '/api/v1/auth/refresh',
       '/api/v1/auth/login',
       '/api/v1/auth/accept-invite',
+      '/api/v1/auth/forgot-password',
+      '/api/v1/auth/reset-password',
       '/api/v1/billing/webhooks/paynow',
     ];
     const isIgnoredPrefix = ignoredPrefixes.some((prefix) => req.path.startsWith(prefix));

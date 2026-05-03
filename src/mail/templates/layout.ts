@@ -10,6 +10,18 @@ export interface LayoutOptions {
   appUrl?: string;
 }
 
+export interface RenderedEmail {
+  subject: string;
+  html: string;
+  text: string;
+}
+
+export interface RenderedEmail {
+  subject: string;
+  html: string;
+  text: string;
+}
+
 export function renderLayout({
   preheader = '',
   title,

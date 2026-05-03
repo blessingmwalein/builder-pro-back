@@ -1,4 +1,4 @@
-import { button, escapeHtml, renderLayout } from './layout';
+import { button, escapeHtml, renderLayout, type RenderedEmail } from './layout';
 
 export interface WelcomeEmailInput {
   firstName: string;
@@ -9,11 +9,6 @@ export interface WelcomeEmailInput {
   appUrl?: string;
 }
 
-export interface RenderedEmail {
-  subject: string;
-  html: string;
-  text: string;
-}
 
 export function renderWelcomeEmail(input: WelcomeEmailInput): RenderedEmail {
   const { firstName, companyName, trialDays, dashboardUrl, brandName, appUrl } = input;

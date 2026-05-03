@@ -1,5 +1,4 @@
-import { button, escapeHtml, renderLayout } from './layout';
-import { RenderedEmail } from './welcome';
+import { button, escapeHtml, renderLayout, type RenderedEmail } from './layout';
 
 export interface InviteEmailInput {
   inviteeFirstName: string;

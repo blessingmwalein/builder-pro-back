@@ -19,6 +19,8 @@ import { InviteUserDto } from './dto/invite-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthService } from './auth.service';
 
 @ApiTags('Auth')
@@ -80,5 +82,19 @@ export class AuthController {
   @ApiOperation({ summary: 'Accept an invite and set password' })
   acceptInvite(@Body() dto: AcceptInviteDto) {
     return this.authService.acceptInvite(dto);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request a password reset OTP code' })
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password using OTP code' })
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }

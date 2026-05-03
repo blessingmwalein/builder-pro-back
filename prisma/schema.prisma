@@ -242,6 +242,8 @@ model User {
   invitedById         String?
   lastLoginAt         DateTime?
   refreshTokenHash    String?
+  resetOtp            String?
+  resetOtpExpiresAt   DateTime?
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
   deletedAt           DateTime?
