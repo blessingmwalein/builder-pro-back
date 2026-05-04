@@ -8,7 +8,7 @@ async function bootstrap() {
 
   const defaultOrigins = [
     'https://builder-pro-web.vercel.app',
-    'https://ownit2buildit.com'
+    'https://ownit2buildit.com',
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:5173',
