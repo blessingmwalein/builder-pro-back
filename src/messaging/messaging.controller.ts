@@ -18,6 +18,7 @@ import type {
 } from '../common/interfaces/request-context.interface';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto } from './dto/send-message.dto';
+import { UpdateParticipantsDto } from './dto/update-participants.dto';
 import { MessagingGateway } from './messaging.gateway';
 import { MessagingService } from './messaging.service';
 
@@ -74,6 +75,28 @@ export class MessagingController {
     @Query() query: PaginationQueryDto,
   ) {
     return this.messagingService.getMessages(tenant.companyId, id, query);
+  }
+
+  @Permissions('messaging.*', 'messaging.send')
+  @Post('conversations/:id/participants')
+  @ApiOperation({ summary: 'Add participants to a conversation' })
+  addParticipants(
+    @Tenant() tenant: RequestTenant,
+    @Param('id') id: string,
+    @Body() dto: UpdateParticipantsDto,
+  ) {
+    return this.messagingService.addParticipants(tenant.companyId, id, dto);
+  }
+
+  @Permissions('messaging.*', 'messaging.send')
+  @Put('conversations/:id/participants/remove')
+  @ApiOperation({ summary: 'Remove participants from a conversation' })
+  removeParticipants(
+    @Tenant() tenant: RequestTenant,
+    @Param('id') id: string,
+    @Body() dto: UpdateParticipantsDto,
+  ) {
+    return this.messagingService.removeParticipants(tenant.companyId, id, dto);
   }
 
   @Permissions('messaging.*', 'messaging.send')

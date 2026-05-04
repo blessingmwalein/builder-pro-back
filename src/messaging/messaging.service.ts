@@ -1,9 +1,10 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { MessageType } from '@prisma/client';
+import { DocumentType, MessageType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto } from './dto/send-message.dto';
+import { UpdateParticipantsDto } from './dto/update-participants.dto';
 
 @Injectable()
 export class MessagingService {
@@ -99,7 +100,7 @@ export class MessagingService {
         companyId,
         deletedAt: null,
       },
-      select: { id: true },
+      select: { id: true, projectId: true },
     });
 
     if (!conversation) {
@@ -111,10 +112,29 @@ export class MessagingService {
         companyId,
         conversationId: dto.conversationId,
         senderId,
-        body: dto.body,
+        body: dto.body ?? '',
+        attachments: dto.attachments?.length
+          ? {
+              create: dto.attachments.map((att) => ({
+                companyId,
+                projectId: conversation.projectId,
+                uploaderId: senderId,
+                fileKey: att.fileKey,
+                fileName: att.fileName,
+                contentType: att.contentType,
+                sizeBytes: att.sizeBytes,
+                type: att.contentType.startsWith('image/')
+                  ? DocumentType.PHOTO
+                  : DocumentType.OTHER,
+              })),
+            }
+          : undefined,
       },
       include: {
-        sender: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+        sender: {
+          select: { id: true, firstName: true, lastName: true, avatarUrl: true },
+        },
+        attachments: true,
       },
     });
 
@@ -147,6 +167,7 @@ export class MessagingService {
         include: {
           sender: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
           receipts: { where: { readAt: { not: null } }, select: { userId: true, readAt: true } },
+          attachments: true,
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -156,6 +177,53 @@ export class MessagingService {
     ]);
 
     return { items: items.reverse(), meta: { page: query.page, limit, total } };
+  }
+
+  async addParticipants(
+    companyId: string,
+    conversationId: string,
+    dto: UpdateParticipantsDto,
+  ) {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, companyId, deletedAt: null },
+    });
+
+    if (!conversation) throw new NotFoundException('Conversation not found');
+
+    await this.prisma.conversationParticipant.createMany({
+      data: dto.userIds.map((userId) => ({
+        companyId,
+        conversationId,
+        userId,
+      })),
+      skipDuplicates: true,
+    });
+
+    return { success: true };
+  }
+
+  async removeParticipants(
+    companyId: string,
+    conversationId: string,
+    dto: UpdateParticipantsDto,
+  ) {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId, companyId, deletedAt: null },
+    });
+
+    if (!conversation) throw new NotFoundException('Conversation not found');
+
+    await this.prisma.conversationParticipant.updateMany({
+      where: {
+        companyId,
+        conversationId,
+        userId: { in: dto.userIds },
+        deletedAt: null,
+      },
+      data: { deletedAt: new Date() },
+    });
+
+    return { success: true };
   }
 
   async markRead(companyId: string, conversationId: string, userId: string) {
