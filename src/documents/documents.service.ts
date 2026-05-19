@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DocumentType } from '@prisma/client';
+import { DocumentApprovalStatus, DocumentType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { CreateDocumentDto } from './dto/create-document.dto';
@@ -8,8 +8,20 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 export class DocumentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(companyId: string, uploaderId: string, dto: CreateDocumentDto) {
-    return this.prisma.document.create({
+  async create(companyId: string, uploaderId: string, dto: CreateDocumentDto) {
+    let version = 1;
+
+    if ((dto as any).parentDocumentId) {
+      const parent = await this.prisma.document.findFirst({
+        where: { id: (dto as any).parentDocumentId, companyId, deletedAt: null },
+        select: { version: true },
+      });
+      if (parent) {
+        version = ((parent as any).version ?? 1) + 1;
+      }
+    }
+
+    return (this.prisma as any).document.create({
       data: {
         companyId,
         projectId: dto.projectId,
@@ -23,6 +35,9 @@ export class DocumentsService {
         gpsLat: (dto as any).gpsLat,
         gpsLng: (dto as any).gpsLng,
         metadata: (dto as any).metadata,
+        version,
+        parentDocumentId: (dto as any).parentDocumentId ?? null,
+        expiresAt: (dto as any).expiresAt ? new Date((dto as any).expiresAt) : null,
       },
     });
   }
@@ -95,5 +110,41 @@ export class DocumentsService {
     });
 
     return { success: true };
+  }
+
+  async approveDocument(companyId: string, id: string, userId: string, notes?: string) {
+    const doc = await this.prisma.document.findFirst({
+      where: { id, companyId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!doc) throw new NotFoundException('Document not found');
+
+    return (this.prisma as any).document.update({
+      where: { id },
+      data: {
+        approvalStatus: DocumentApprovalStatus.APPROVED,
+        approvedById: userId,
+        approvedAt: new Date(),
+        approvalNotes: notes ?? null,
+      },
+    });
+  }
+
+  async rejectDocument(companyId: string, id: string, userId: string, notes: string) {
+    const doc = await this.prisma.document.findFirst({
+      where: { id, companyId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!doc) throw new NotFoundException('Document not found');
+
+    return (this.prisma as any).document.update({
+      where: { id },
+      data: {
+        approvalStatus: DocumentApprovalStatus.REJECTED,
+        approvedById: userId,
+        approvedAt: new Date(),
+        approvalNotes: notes,
+      },
+    });
   }
 }

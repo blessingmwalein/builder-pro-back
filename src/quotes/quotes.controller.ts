@@ -12,6 +12,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { QuoteStatus } from '@prisma/client';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { Permissions } from '../common/decorators/permissions.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { Tenant } from '../common/decorators/tenant.decorator';
 import type { RequestTenant } from '../common/interfaces/request-context.interface';
 import { CreateQuoteDto } from './dto/create-quote.dto';
@@ -97,6 +98,21 @@ export class QuotesController {
   @ApiOperation({ summary: 'Delete quote (soft delete)' })
   remove(@Tenant() tenant: RequestTenant, @Param('id') id: string) {
     return this.quotesService.remove(tenant.companyId, id);
+  }
+
+  // Public client-facing endpoints (no auth — signed with HMAC)
+  @Public()
+  @Get('public/:id')
+  @ApiOperation({ summary: 'Public: view quote by signed URL' })
+  findPublic(@Param('id') id: string, @Query('sig') sig: string) {
+    return this.quotesService.findPublic(id, sig ?? '');
+  }
+
+  @Public()
+  @Post('public/:id/accept')
+  @ApiOperation({ summary: 'Public: client accepts quote by signed URL' })
+  acceptPublic(@Param('id') id: string, @Query('sig') sig: string) {
+    return this.quotesService.acceptPublic(id, sig ?? '');
   }
 
   // Variations (Change Orders)

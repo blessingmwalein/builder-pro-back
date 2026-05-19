@@ -30,4 +30,9 @@ export class CreateSupplierDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional({ description: 'Comma separated list of category codes' })
+  @IsOptional()
+  @IsString()
+  categories?: string;
 }

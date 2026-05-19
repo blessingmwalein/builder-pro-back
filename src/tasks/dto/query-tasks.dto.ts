@@ -14,6 +14,10 @@ export class QueryTasksDto {
   projectId?: string;
 
   @IsOptional()
+  @IsString()
+  stageId?: string;
+
+  @IsOptional()
   @IsEnum(TaskStatus)
   status?: TaskStatus;
 

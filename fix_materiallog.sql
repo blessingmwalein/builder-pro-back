@@ -1,0 +1,1 @@
+ALTER TABLE "MaterialLog" ALTER COLUMN "projectId" DROP NOT NULL;

@@ -1,14 +1,23 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { extname, join } from 'path';
+import { promises as fs } from 'fs';
+import { randomUUID } from 'crypto';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Permissions } from '../common/decorators/permissions.decorator';
 import { Tenant } from '../common/decorators/tenant.decorator';
@@ -137,6 +146,54 @@ export class TasksController {
     @Body() dto: CreateChecklistDto,
   ) {
     return this.tasksService.createChecklist(tenant.companyId, id, dto);
+  }
+
+  @Permissions('tasks.*', 'tasks.view')
+  @Get(':id/attachments')
+  @ApiOperation({ summary: 'List task attachments' })
+  listAttachments(@Tenant() tenant: RequestTenant, @Param('id') id: string) {
+    return this.tasksService.listAttachments(tenant.companyId, id);
+  }
+
+  @Permissions('tasks.*')
+  @Post(':id/attachments')
+  @ApiOperation({ summary: 'Upload a task attachment' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 20 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        const ALLOWED = [
+          'image/jpeg', 'image/png', 'image/webp', 'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ];
+        if (ALLOWED.includes(file.mimetype)) cb(null, true);
+        else cb(new BadRequestException('File type not allowed'), false);
+      },
+    }),
+  )
+  async uploadAttachment(
+    @Tenant() tenant: RequestTenant,
+    @Param('id') id: string,
+    @UploadedFile() file: { originalname: string; mimetype: string; buffer: Buffer; size: number },
+  ) {
+    if (!file) throw new BadRequestException('No file provided');
+    const ext = extname(file.originalname).toLowerCase() || '.bin';
+    const filename = `${randomUUID()}${ext}`;
+    const uploadsDir = join(process.cwd(), 'uploads', 'tasks');
+    await fs.mkdir(uploadsDir, { recursive: true });
+    await fs.writeFile(join(uploadsDir, filename), file.buffer);
+    const baseUrl = process.env.FILE_STORAGE_BASE_URL ?? `http://localhost:${process.env.PORT ?? 3000}`;
+    const url = `${baseUrl}/uploads/tasks/${filename}`;
+    return this.tasksService.addAttachment(tenant.companyId, id, {
+      fileName: file.originalname,
+      fileKey: `tasks/${filename}`,
+      url,
+      contentType: file.mimetype,
+      sizeBytes: file.size,
+    });
   }
 
   @Permissions('tasks.*')

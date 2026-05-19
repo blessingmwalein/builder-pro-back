@@ -1,8 +1,11 @@
 import {
+  IsArray,
   IsEmail,
   IsEnum,
+  IsInt,
   IsOptional,
   IsString,
+  Min,
   MinLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -62,4 +65,22 @@ export class RegisterCompanyDto {
   @IsOptional()
   @IsString()
   planCode?: string;
+
+  // ── Company profile fields (Step 3B) ──────────────────────────
+  @ApiPropertyOptional() @IsOptional() @IsString() legalName?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() registrationNumber?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() taxNumber?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() website?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() companySize?: string;
+  @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) yearsOperating?: number;
+  @ApiPropertyOptional() @IsOptional() @IsString() description?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() businessPhone?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() businessEmail?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() city?: string;
+
+  // ── Individual business profile fields (Step 3A) ──────────────
+  @ApiPropertyOptional() @IsOptional() @IsString() businessName?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() primarySector?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() businessSize?: string;
+  @ApiPropertyOptional({ type: [String] }) @IsOptional() @IsArray() @IsString({ each: true }) serviceAreas?: string[];
 }

@@ -67,4 +67,28 @@ export class DocumentsController {
   remove(@Tenant() tenant: RequestTenant, @Param('id') id: string) {
     return this.documentsService.remove(tenant.companyId, id);
   }
+
+  @Permissions('documents.*')
+  @Post(':id/approve')
+  @ApiOperation({ summary: 'Approve a document' })
+  approve(
+    @Tenant() tenant: RequestTenant,
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+    @Body() body: { notes?: string } = {},
+  ) {
+    return this.documentsService.approveDocument(tenant.companyId, id, user.userId, body.notes);
+  }
+
+  @Permissions('documents.*')
+  @Post(':id/reject')
+  @ApiOperation({ summary: 'Reject a document' })
+  reject(
+    @Tenant() tenant: RequestTenant,
+    @CurrentUser() user: RequestUser,
+    @Param('id') id: string,
+    @Body() body: { notes: string },
+  ) {
+    return this.documentsService.rejectDocument(tenant.companyId, id, user.userId, body.notes);
+  }
 }

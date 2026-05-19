@@ -10,6 +10,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { SubscriptionConfigService, UpdateSubscriptionConfigInput } from '../subscriptions/subscription-config.service';
+import { PromoCodesService } from './promo-codes.service';
+import type { CreatePromoCodeInput } from './promo-codes.service';
 import { ApiBearerAuth, ApiHeader, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { SubscriptionStatus } from '@prisma/client';
@@ -34,7 +37,11 @@ import { CreateRoleDto } from '../rbac/dto/create-role.dto';
 @UseGuards(PlatformAdminGuard)
 @Controller('platform-admin')
 export class PlatformAdminController {
-  constructor(private readonly platformAdminService: PlatformAdminService) {}
+  constructor(
+    private readonly platformAdminService: PlatformAdminService,
+    private readonly subscriptionConfigService: SubscriptionConfigService,
+    private readonly promoCodesService: PromoCodesService,
+  ) {}
 
   @Get('overview')
   overview() {
@@ -168,5 +175,42 @@ export class PlatformAdminController {
     @Param('roleId') roleId: string,
   ) {
     return this.platformAdminService.removeRole(companyId, userId, roleId);
+  }
+
+  // ── Subscription configuration ────────────────────────────────────────────
+
+  @Get('subscription-config')
+  getSubscriptionConfig() {
+    return this.subscriptionConfigService.getConfig();
+  }
+
+  @Patch('subscription-config')
+  updateSubscriptionConfig(@Body() body: UpdateSubscriptionConfigInput) {
+    return this.subscriptionConfigService.updateConfig(body);
+  }
+
+  // ── Promo / voucher codes ──────────────────────────────────────────────────
+
+  @Get('promo-codes')
+  listPromoCodes(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.promoCodesService.list(
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 20,
+    );
+  }
+
+  @Post('promo-codes')
+  createPromoCode(@Body() body: CreatePromoCodeInput) {
+    return this.promoCodesService.create(body);
+  }
+
+  @Patch('promo-codes/:id/toggle')
+  togglePromoCode(@Param('id') id: string, @Body() body: { isActive: boolean }) {
+    return this.promoCodesService.toggle(id, body.isActive);
+  }
+
+  @Delete('promo-codes/:id')
+  deletePromoCode(@Param('id') id: string) {
+    return this.promoCodesService.remove(id);
   }
 }

@@ -31,6 +31,13 @@ import { PlatformAdminModule } from './platform-admin/platform-admin.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
 import { MailModule } from './mail/mail.module';
 import { ElectrosalesModule } from './integrations/electrosales/electrosales.module';
+import { ProjectStagesModule } from './project-stages/project-stages.module';
+import { ChangeRequestsModule } from './change-requests/change-requests.module';
+import { ClientPortalModule } from './client-portal/client-portal.module';
+import { ProjectTemplatesModule } from './project-templates/project-templates.module';
+import { ProcurementModule } from './procurement/procurement.module';
+import { ApprovalsModule } from './approvals/approvals.module';
+import { EquipmentModule } from './equipment/equipment.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { SubscriptionGuard } from './common/guards/subscription.guard';
@@ -73,6 +80,13 @@ import { SubscriptionGuard } from './common/guards/subscription.guard';
     PlatformAdminModule,
     OnboardingModule,
     ElectrosalesModule,
+    ProjectStagesModule,
+    ChangeRequestsModule,
+    ClientPortalModule,
+    ProjectTemplatesModule,
+    ProcurementModule,
+    ApprovalsModule,
+    EquipmentModule,
   ],
   controllers: [AppController],
   providers: [

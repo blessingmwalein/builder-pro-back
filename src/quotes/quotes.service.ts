@@ -1,8 +1,12 @@
+import { createHmac } from 'crypto';
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { QuoteStatus, VariationStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
@@ -10,6 +14,7 @@ import {
   ElectrosalesService,
   ELECTROSALES_SOURCE,
 } from '../integrations/electrosales/electrosales.service';
+import { MailService } from '../mail/mail.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { CreateVariationDto } from './dto/create-variation.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
@@ -41,9 +46,13 @@ type QuoteLineItemInput = {
 
 @Injectable()
 export class QuotesService {
+  private readonly logger = new Logger(QuotesService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly electrosales: ElectrosalesService,
+    private readonly mailService: MailService,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(companyId: string, dto: CreateQuoteDto) {
@@ -246,7 +255,10 @@ export class QuotesService {
   async send(companyId: string, id: string) {
     const quote = await this.prisma.quote.findFirst({
       where: { id, companyId, deletedAt: null },
-      select: { id: true, status: true },
+      include: {
+        client: { select: { id: true, name: true, email: true } },
+        lineItems: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } },
+      },
     });
 
     if (!quote) throw new NotFoundException('Quote not found');
@@ -254,9 +266,110 @@ export class QuotesService {
       throw new BadRequestException('Only draft quotes can be sent');
     }
 
-    return this.prisma.quote.update({
+    const updated = await this.prisma.quote.update({
       where: { id },
       data: { status: QuoteStatus.SENT, sentAt: new Date() },
+      include: {
+        lineItems: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } },
+        client: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    if (quote.client?.email) {
+      const company = await this.prisma.company.findUnique({
+        where: { id: companyId },
+        select: { name: true, defaultCurrency: true },
+      });
+
+      const sig = this.generateQuoteSignature(id);
+      const viewUrl = `${this.mailService.buildQuoteUrl(id)}?sig=${sig}`;
+      const currencySymbol = this.getCurrencySymbol(company?.defaultCurrency);
+
+      this.mailService
+        .sendQuote(quote.client.email, {
+          clientName: quote.client.name,
+          quoteNumber: quote.quoteNumber,
+          quoteTitle: quote.title || 'Quote',
+          issueDate: quote.issueDate
+            ? new Date(quote.issueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            : '',
+          expiryDate: quote.expiryDate
+            ? new Date(quote.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            : undefined,
+          subtotal: Number(quote.subtotal),
+          taxAmount: Number(quote.taxAmount),
+          discountAmount: Number(quote.discountAmount),
+          total: Number(quote.totalAmount),
+          currencySymbol,
+          viewUrl,
+          senderCompanyName: company?.name || 'ownit2buildit',
+          lineItems: quote.lineItems.map((li) => ({
+            description: li.description,
+            quantity: Number(li.quantity),
+            unitPrice: Number(li.unitPrice),
+            total: Number((li as any).totalPrice ?? Number(li.quantity) * Number(li.unitPrice)),
+          })),
+          notes: quote.notes ?? undefined,
+        })
+        .catch((err: Error) =>
+          this.logger.error(`Quote email to ${quote.client!.email} failed: ${err.message}`),
+        );
+    }
+
+    return updated;
+  }
+
+  private getCurrencySymbol(code?: string | null): string {
+    const map: Record<string, string> = {
+      USD: '$', EUR: '€', GBP: '£', ZWL: 'Z$', ZAR: 'R',
+      ZMW: 'K', NAD: 'N$', BWP: 'P', KES: 'KSh', NGN: '₦',
+    };
+    return code ? (map[code] ?? code) : '$';
+  }
+
+  generateQuoteSignature(quoteId: string): string {
+    const secret = this.configService.get<string>('auth.jwtSecret') ?? 'change-me';
+    return createHmac('sha256', secret).update(quoteId).digest('hex').slice(0, 40);
+  }
+
+  private verifyQuoteSignature(quoteId: string, sig: string): boolean {
+    return sig === this.generateQuoteSignature(quoteId);
+  }
+
+  async findPublic(id: string, sig: string) {
+    if (!this.verifyQuoteSignature(id, sig)) {
+      throw new ForbiddenException('Invalid or missing quote signature');
+    }
+    const quote = await this.prisma.quote.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        lineItems: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } },
+        client: { select: { id: true, name: true, email: true } },
+        company: { select: { name: true, defaultCurrency: true, logoUrl: true } },
+      },
+    });
+    if (!quote) throw new NotFoundException('Quote not found');
+    return quote;
+  }
+
+  async acceptPublic(id: string, sig: string) {
+    if (!this.verifyQuoteSignature(id, sig)) {
+      throw new ForbiddenException('Invalid or missing quote signature');
+    }
+    const quote = await this.prisma.quote.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!quote) throw new NotFoundException('Quote not found');
+    if (quote.status !== QuoteStatus.SENT) {
+      throw new BadRequestException('This quote is no longer awaiting acceptance');
+    }
+    return this.prisma.quote.update({
+      where: { id },
+      data: { status: QuoteStatus.APPROVED, approvedAt: new Date() },
+      include: {
+        lineItems: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } },
+        client: { select: { id: true, name: true, email: true } },
+      },
     });
   }
 
@@ -290,6 +403,10 @@ export class QuotesService {
     const updated = await this.prisma.quote.update({
       where: { id },
       data: { status: QuoteStatus.APPROVED, approvedAt: new Date() },
+      include: {
+        lineItems: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } },
+        client: { select: { id: true, name: true, email: true } },
+      },
     });
 
     // If the quote is tied to a project, record material usage for every

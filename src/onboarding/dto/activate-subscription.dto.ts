@@ -48,4 +48,12 @@ export class ActivateSubscriptionDto {
   @IsOptional()
   @IsString()
   payerPhone?: string;
+
+  @ApiPropertyOptional({
+    example: 'LAUNCH20',
+    description: 'Optional promo / voucher code for a discount',
+  })
+  @IsOptional()
+  @IsString()
+  promoCode?: string;
 }

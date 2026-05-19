@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LogMaterialUsageDto {
@@ -27,4 +27,9 @@ export class LogMaterialUsageDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional({ example: '2026-05-15' })
+  @IsOptional()
+  @IsDateString()
+  usedAt?: string;
 }

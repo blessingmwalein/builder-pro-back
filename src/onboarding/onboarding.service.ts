@@ -11,8 +11,75 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaynowProvider } from '../billing/paynow.provider';
 import { MailService } from '../mail/mail.service';
+import { SubscriptionConfigService } from '../subscriptions/subscription-config.service';
+import { PromoCodesService } from '../platform-admin/promo-codes.service';
 import { ActivateSubscriptionDto, BillingCycle } from './dto/activate-subscription.dto';
 import { RegisterCompanyDto } from './dto/register-company.dto';
+import { OnboardingSetupDto } from './dto/onboarding-setup.dto';
+import {
+  CONSTRUCTION_SECTORS,
+  CONSTRUCTION_PROJECT_TYPES,
+  STAKEHOLDER_TYPES,
+  WORKFLOW_TEMPLATES,
+  DEFAULT_SECTORS,
+  DEFAULT_PROJECT_TYPES,
+  DEFAULT_STAKEHOLDERS,
+  DEFAULT_WORKFLOWS,
+} from './onboarding.constants';
+
+export async function seedWorkspaceDefaults(prisma: PrismaService, companyId: string) {
+  await prisma.$transaction(async (tx) => {
+    await (tx as any).companySettings.upsert({
+      where: { companyId },
+      create: { companyId },
+      update: {},
+    });
+
+    await (tx as any).tenantSector.createMany({
+      data: DEFAULT_SECTORS
+        .map((code) => CONSTRUCTION_SECTORS.find((s) => s.code === code)!)
+        .map((s) => ({ companyId, code: s.code, name: s.name })),
+      skipDuplicates: true,
+    });
+
+    await (tx as any).tenantProjectType.createMany({
+      data: DEFAULT_PROJECT_TYPES
+        .map((code) => CONSTRUCTION_PROJECT_TYPES.find((p) => p.code === code)!)
+        .map((p) => ({ companyId, code: p.code, name: p.name })),
+      skipDuplicates: true,
+    });
+
+    for (const type of DEFAULT_STAKEHOLDERS) {
+      const def = STAKEHOLDER_TYPES[type];
+      if (!def) continue;
+      const existing = await (tx as any).tenantStakeholder.findFirst({ where: { companyId, type } });
+      if (existing) continue;
+      let role = await tx.role.findFirst({ where: { companyId, name: def.name, deletedAt: null } });
+      if (!role) {
+        role = await tx.role.create({
+          data: { companyId, name: def.name, description: def.description, isSystem: false },
+        });
+      }
+      await (tx as any).tenantStakeholder.create({
+        data: { companyId, type, name: def.name, roleId: role.id },
+      });
+    }
+
+    await (tx as any).workflowTemplate.createMany({
+      data: DEFAULT_WORKFLOWS
+        .filter((code) => WORKFLOW_TEMPLATES[code])
+        .map((code) => ({
+          companyId,
+          code,
+          name: WORKFLOW_TEMPLATES[code].name,
+          description: WORKFLOW_TEMPLATES[code].description,
+          stages: WORKFLOW_TEMPLATES[code].stages,
+          isEnabled: true,
+        })),
+      skipDuplicates: true,
+    });
+  });
+}
 
 const SYSTEM_ROLES = [
   {
@@ -129,6 +196,8 @@ export class OnboardingService {
     private readonly configService: ConfigService,
     private readonly paynowProvider: PaynowProvider,
     private readonly mailService: MailService,
+    private readonly subscriptionConfigService: SubscriptionConfigService,
+    private readonly promoCodesService: PromoCodesService,
   ) {}
 
   listPlans() {
@@ -176,18 +245,56 @@ export class OnboardingService {
     const uniquePermissionKeys = [
       ...new Set(SYSTEM_ROLES.flatMap((roleDef) => roleDef.permissions)),
     ];
+    const subConfig = await this.subscriptionConfigService.getConfig();
 
     const result = await this.prisma.$transaction(async (tx) => {
+      const accountType = dto.accountType ?? AccountType.COMPANY;
+
       const company = await tx.company.create({
         data: {
           companyId,
           name: dto.companyName,
           slug,
           industry: dto.industry,
-          accountType: dto.accountType ?? AccountType.COMPANY,
+          accountType,
           defaultCurrency: dto.defaultCurrency ?? 'USD',
           countryCode: dto.countryCode ?? 'ZW',
           isActive: true,
+          legalName: dto.legalName,
+          registrationNumber: dto.registrationNumber,
+          taxNumber: dto.taxNumber,
+          website: dto.website,
+          companySize: dto.companySize,
+          yearsOperating: dto.yearsOperating,
+          description: dto.description,
+          businessPhone: dto.businessPhone,
+          businessEmail: dto.businessEmail,
+          city: dto.city,
+        },
+      });
+
+      if (accountType === AccountType.INDIVIDUAL && dto.businessName) {
+        await tx.individualBusinessProfile.create({
+          data: {
+            companyId: company.id,
+            businessName: dto.businessName,
+            primarySector: dto.primarySector,
+            businessSize: dto.businessSize,
+            serviceAreas: dto.serviceAreas ?? [],
+            city: dto.city,
+            country: dto.countryCode,
+            phone: dto.phone,
+            businessEmail: dto.businessEmail,
+            registrationNumber: dto.registrationNumber,
+            taxNumber: dto.taxNumber,
+          },
+        });
+      }
+
+      await tx.companySettings.create({
+        data: {
+          companyId: company.id,
+          currency: dto.defaultCurrency ?? 'USD',
         },
       });
 
@@ -264,7 +371,7 @@ export class OnboardingService {
 
       const trialStart = new Date();
       const trialEnd = new Date(trialStart);
-      trialEnd.setDate(trialEnd.getDate() + 14);
+      trialEnd.setDate(trialEnd.getDate() + subConfig.trialDays);
 
       const subscription = await tx.subscription.create({
         data: {
@@ -357,9 +464,10 @@ export class OnboardingService {
         throw new NotFoundException(`Plan '${initialPlanCode}' not found.`);
       }
 
+      const activateConfig = await this.subscriptionConfigService.getConfig();
       const trialStart = new Date();
       const trialEnd = new Date(trialStart);
-      trialEnd.setDate(trialEnd.getDate() + 14);
+      trialEnd.setDate(trialEnd.getDate() + activateConfig.trialDays);
 
       subscription = await this.prisma.$transaction(async (tx) => {
         const localPlan = await tx.subscriptionPlan.upsert({
@@ -404,7 +512,10 @@ export class OnboardingService {
       });
     }
 
-    if (subscription.status === SubscriptionStatus.ACTIVE) {
+    if (
+      subscription.status === SubscriptionStatus.ACTIVE &&
+      subscription.currentPeriodTo >= new Date()
+    ) {
       throw new BadRequestException('Subscription is already active.');
     }
 
@@ -422,9 +533,20 @@ export class OnboardingService {
     }
 
     const billingCycle = dto.billingCycle ?? BillingCycle.MONTHLY;
-    const price = billingCycle === BillingCycle.ANNUAL
+    const basePrice = billingCycle === BillingCycle.ANNUAL
       ? Number(platformPlan.annualPrice)
       : Number(platformPlan.monthlyPrice);
+
+    // Apply promo code discount if provided
+    let price = basePrice;
+    let promoDescription: string | null = null;
+    if (dto.promoCode) {
+      const promo = await this.promoCodesService.validate(dto.promoCode, companyId);
+      if (promo.valid) {
+        price = this.promoCodesService.applyDiscount(basePrice, promo.discountType, promo.discountValue);
+        promoDescription = promo.description ?? null;
+      }
+    }
 
     if (price === 0) {
       // Free plan — activate immediately
@@ -445,12 +567,19 @@ export class OnboardingService {
         },
       });
 
+      if (dto.promoCode) {
+        void this.promoCodesService.redeem(dto.promoCode, companyId);
+      }
+
+      void seedWorkspaceDefaults(this.prisma, companyId);
+
       return {
         status: 'ACTIVE',
         planCode: platformPlan.code,
         planName: platformPlan.name,
         billingCycle,
         currentPeriodTo: periodEnd,
+        discount: promoDescription,
         entitlements: {
           limits: platformPlan.limits,
           features: platformPlan.features,
@@ -503,12 +632,18 @@ export class OnboardingService {
       },
     });
 
+    if (dto.promoCode) {
+      void this.promoCodesService.redeem(dto.promoCode, companyId);
+    }
+
     return {
       status: 'PENDING_PAYMENT',
       planCode: platformPlan.code,
       planName: platformPlan.name,
       billingCycle,
+      originalAmount: basePrice,
       amount: price,
+      discount: promoDescription,
       currency: 'USD',
       entitlements: {
         limits: platformPlan.limits,
@@ -558,6 +693,126 @@ export class OnboardingService {
       isExpired: isTrialExpired || (
         subscription.status === SubscriptionStatus.ACTIVE && subscription.currentPeriodTo < now
       ),
+    };
+  }
+
+  getOptions() {
+    return {
+      sectors: CONSTRUCTION_SECTORS,
+      projectTypes: CONSTRUCTION_PROJECT_TYPES,
+      stakeholders: Object.entries(STAKEHOLDER_TYPES).map(([code, v]) => ({
+        code,
+        name: v.name,
+        description: v.description,
+      })),
+      workflows: Object.entries(WORKFLOW_TEMPLATES).map(([code, v]) => ({
+        code,
+        name: v.name,
+        description: v.description,
+      })),
+    };
+  }
+
+  async saveOnboardingSetup(companyId: string, dto: OnboardingSetupDto) {
+    await this.prisma.$transaction(
+      async (tx) => {
+        // Sectors
+        await tx.tenantSector.deleteMany({ where: { companyId } });
+        if (dto.selectedSectors.length > 0) {
+          const sectorData = dto.selectedSectors
+            .map((code) => CONSTRUCTION_SECTORS.find((s) => s.code === code))
+            .filter(Boolean) as { code: string; name: string }[];
+          await tx.tenantSector.createMany({
+            data: sectorData.map((s) => ({ companyId, code: s.code, name: s.name })),
+            skipDuplicates: true,
+          });
+        }
+
+        // Project types
+        await tx.tenantProjectType.deleteMany({ where: { companyId } });
+        if (dto.selectedProjectTypes.length > 0) {
+          const ptData = dto.selectedProjectTypes
+            .map((code) => CONSTRUCTION_PROJECT_TYPES.find((p) => p.code === code))
+            .filter(Boolean) as { code: string; name: string }[];
+          await tx.tenantProjectType.createMany({
+            data: ptData.map((p) => ({ companyId, code: p.code, name: p.name })),
+            skipDuplicates: true,
+          });
+        }
+
+        // Stakeholders → auto-create Roles + Permissions
+        await tx.tenantStakeholder.deleteMany({ where: { companyId } });
+        for (const type of dto.selectedStakeholders) {
+          const def = STAKEHOLDER_TYPES[type];
+          if (!def) continue;
+
+          // Skip creating a role if one with this name already exists
+          let role = await tx.role.findFirst({ where: { companyId, name: def.name, deletedAt: null } });
+          if (!role) {
+            role = await tx.role.create({
+              data: { companyId, name: def.name, description: def.description, isSystem: false },
+            });
+
+            await tx.permission.createMany({
+              data: def.permissions.map((key) => ({ companyId, key, description: `Permission: ${key}` })),
+              skipDuplicates: true,
+            });
+
+            const perms = await tx.permission.findMany({
+              where: { companyId, key: { in: def.permissions } },
+              select: { id: true },
+            });
+
+            await tx.rolePermission.createMany({
+              data: perms.map((p) => ({ companyId, roleId: role!.id, permissionId: p.id })),
+              skipDuplicates: true,
+            });
+          }
+
+          await tx.tenantStakeholder.create({
+            data: { companyId, type, name: def.name, roleId: role.id },
+          });
+        }
+
+        // Workflow templates
+        await tx.workflowTemplate.deleteMany({ where: { companyId } });
+        if (dto.selectedWorkflows.length > 0) {
+          await tx.workflowTemplate.createMany({
+            data: dto.selectedWorkflows
+              .filter((code) => WORKFLOW_TEMPLATES[code])
+              .map((code) => ({
+                companyId,
+                code,
+                name: WORKFLOW_TEMPLATES[code].name,
+                description: WORKFLOW_TEMPLATES[code].description,
+                stages: WORKFLOW_TEMPLATES[code].stages as any,
+                isEnabled: true,
+              })),
+            skipDuplicates: true,
+          });
+        }
+      },
+      {
+        maxWait: 15000,
+        timeout: 45000, // increased to 45s
+      },
+    );
+
+    return this.getOnboardingSetup(companyId);
+  }
+
+  async getOnboardingSetup(companyId: string) {
+    const [sectors, projectTypes, stakeholders, workflows] = await Promise.all([
+      this.prisma.tenantSector.findMany({ where: { companyId } }),
+      this.prisma.tenantProjectType.findMany({ where: { companyId } }),
+      this.prisma.tenantStakeholder.findMany({ where: { companyId } }),
+      this.prisma.workflowTemplate.findMany({ where: { companyId } }),
+    ]);
+    return {
+      selectedSectors: sectors.map((s) => s.code),
+      selectedProjectTypes: projectTypes.map((p) => p.code),
+      selectedStakeholders: stakeholders.map((s) => s.type),
+      selectedWorkflows: workflows.map((w) => w.code),
     };
   }
 

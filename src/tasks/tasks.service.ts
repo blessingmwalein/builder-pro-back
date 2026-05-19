@@ -74,6 +74,7 @@ export class TasksService {
         companyId,
         projectId: dto.projectId,
         parentTaskId: dto.parentTaskId,
+        stageId: dto.stageId || null,
         title: dto.title,
         description: dto.description,
         status: dto.status,
@@ -110,6 +111,10 @@ export class TasksService {
 
     if (query.projectId) {
       where.projectId = query.projectId;
+    }
+
+    if (query.stageId !== undefined) {
+      where.stageId = query.stageId || null;
     }
 
     if (query.status) {
@@ -192,10 +197,25 @@ export class TasksService {
       if (!targetProject) throw new BadRequestException('Invalid projectId');
     }
 
+    if (dto.assigneeIds !== undefined) {
+      await this.prisma.taskAssignee.updateMany({
+        where: { taskId: id, companyId, deletedAt: null },
+        data: { deletedAt: new Date() },
+      });
+      for (const userId of dto.assigneeIds) {
+        await this.prisma.taskAssignee.upsert({
+          where: { companyId_taskId_userId: { companyId, taskId: id, userId } },
+          create: { companyId, taskId: id, userId },
+          update: { deletedAt: null },
+        });
+      }
+    }
+
     const updated = await this.prisma.task.update({
       where: { id },
       data: {
         projectId: dto.projectId,
+        stageId: dto.stageId !== undefined ? (dto.stageId || null) : undefined,
         title: dto.title,
         description: dto.description,
         status: dto.status,
@@ -348,6 +368,34 @@ export class TasksService {
       where: { id: itemId },
       data: { isDone: !item.isDone },
     });
+  }
+
+  async listAttachments(companyId: string, taskId: string) {
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, companyId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!task) throw new NotFoundException('Task not found');
+    return this.prisma.taskAttachment.findMany({
+      where: { companyId, taskId, deletedAt: null },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async addAttachment(
+    companyId: string,
+    taskId: string,
+    data: { fileName: string; fileKey: string; url: string; contentType: string; sizeBytes: number },
+  ) {
+    const task = await this.prisma.task.findFirst({
+      where: { id: taskId, companyId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!task) throw new NotFoundException('Task not found');
+    const attachment = await this.prisma.taskAttachment.create({
+      data: { companyId, taskId, fileName: data.fileName, fileKey: data.fileKey, contentType: data.contentType, sizeBytes: data.sizeBytes },
+    });
+    return { ...attachment, url: data.url };
   }
 
   private async recalculateProjectCompletion(companyId: string, projectId: string) {

@@ -53,6 +53,11 @@ export class CreateTaskDto {
   @IsString()
   parentTaskId?: string;
 
+  @ApiPropertyOptional({ example: 'cm9v0stage0001' })
+  @IsOptional()
+  @IsString()
+  stageId?: string | null;
+
   @ApiPropertyOptional({ example: ['cm9v0usr1', 'cm9v0usr2'] })
   @IsOptional()
   @IsArray()

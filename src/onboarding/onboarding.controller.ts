@@ -1,17 +1,22 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Tenant } from '../common/decorators/tenant.decorator';
 import type { RequestTenant, RequestUser } from '../common/interfaces/request-context.interface';
+import { PromoCodesService } from '../platform-admin/promo-codes.service';
 import { ActivateSubscriptionDto } from './dto/activate-subscription.dto';
 import { RegisterCompanyDto } from './dto/register-company.dto';
+import { OnboardingSetupDto } from './dto/onboarding-setup.dto';
 import { OnboardingService } from './onboarding.service';
 
 @ApiTags('Onboarding')
 @Controller('onboarding')
 export class OnboardingController {
-  constructor(private readonly onboardingService: OnboardingService) {}
+  constructor(
+    private readonly onboardingService: OnboardingService,
+    private readonly promoCodesService: PromoCodesService,
+  ) {}
 
   @Public()
   @Get('plans')
@@ -72,5 +77,48 @@ export class OnboardingController {
     @Body() dto: ActivateSubscriptionDto,
   ) {
     return this.onboardingService.activateSubscription(tenant.companyId, dto, user.email);
+  }
+
+  @Public()
+  @Get('options')
+  @ApiOperation({
+    summary: 'Get available setup options (public)',
+    description: 'Returns all available sectors, project types, stakeholder types and workflow templates.',
+  })
+  getOptions() {
+    return this.onboardingService.getOptions();
+  }
+
+  @ApiBearerAuth()
+  @Post('setup')
+  @ApiOperation({
+    summary: 'Save onboarding setup selections',
+    description: 'Persists selected sectors, project types, stakeholders and workflows. Auto-creates roles for each stakeholder type.',
+  })
+  saveSetup(
+    @Tenant() tenant: RequestTenant,
+    @Body() dto: OnboardingSetupDto,
+  ) {
+    return this.onboardingService.saveOnboardingSetup(tenant.companyId, dto);
+  }
+
+  @ApiBearerAuth()
+  @Get('setup')
+  @ApiOperation({
+    summary: 'Get current onboarding setup for the authenticated tenant',
+    description: 'Returns the previously saved setup selections (for wizard resume).',
+  })
+  getSetup(@Tenant() tenant: RequestTenant) {
+    return this.onboardingService.getOnboardingSetup(tenant.companyId);
+  }
+
+  @ApiBearerAuth()
+  @Get('validate-promo')
+  @ApiOperation({ summary: 'Validate a promo code and preview the discount' })
+  validatePromo(
+    @Tenant() tenant: RequestTenant,
+    @Query('code') code: string,
+  ) {
+    return this.promoCodesService.validate(code ?? '', tenant.companyId);
   }
 }

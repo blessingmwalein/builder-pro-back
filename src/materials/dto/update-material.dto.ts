@@ -1,6 +1,7 @@
 import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
+
 export class UpdateMaterialDto {
   @ApiPropertyOptional()
   @IsOptional()
@@ -54,4 +55,9 @@ export class UpdateMaterialDto {
   @IsNumber()
   @Min(0)
   stockOnHand?: number;
+
+  @ApiPropertyOptional({ description: 'Required when changing unitCost or stockOnHand' })
+  @IsOptional()
+  @IsString()
+  reason?: string;
 }

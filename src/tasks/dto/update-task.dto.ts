@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsEnum,
   IsISO8601,
   IsNumber,
@@ -48,4 +49,15 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsNumber()
   estimatedHours?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  stageId?: string | null;
+
+  @ApiPropertyOptional({ example: ['cm9v0usr1', 'cm9v0usr2'] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  assigneeIds?: string[];
 }

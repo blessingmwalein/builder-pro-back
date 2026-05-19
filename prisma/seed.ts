@@ -1,6 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { createHash } from 'crypto';
+import {
+  CONSTRUCTION_SECTORS,
+  CONSTRUCTION_PROJECT_TYPES,
+  STAKEHOLDER_TYPES,
+  WORKFLOW_TEMPLATES,
+  DEFAULT_SECTORS,
+  DEFAULT_PROJECT_TYPES,
+  DEFAULT_STAKEHOLDERS,
+  DEFAULT_WORKFLOWS,
+} from '../src/onboarding/onboarding.constants';
 
 const prisma = new PrismaClient();
 
@@ -227,26 +237,99 @@ async function main() {
   }
 
   // ─── Platform-wide Subscription Plans ───────────────────────────────────
-  const PLATFORM_PLANS = [
+  // Individual / sole contractor plans
+  const INDIVIDUAL_PLANS = [
     {
-      code: 'SMALL_BUSINESS',
-      name: 'Small Business',
-      description: 'Ideal for small construction companies with up to 10 staff.',
-      targetAccountType: 'COMPANY' as const,
-      monthlyPrice: 70,
-      annualPrice: 672, // ~20% off
+      code: 'SOLE_STARTER',
+      name: 'Sole Starter',
+      description: 'For independent tradespeople managing small repairs and renovations.',
+      targetAccountType: 'INDIVIDUAL' as const,
+      monthlyPrice: 19,
+      annualPrice: 182,
       sortOrder: 1,
-      limits: { maxProjects: 20, maxUsers: 10, storageGb: 50 },
+      limits: { maxProjects: 8, maxUsers: 2, storageGb: 10 },
+      features: [
+        'Up to 2 user seats',
+        '8 active projects',
+        '10 GB document storage',
+        'Quotes & invoices',
+        'Material tracking',
+        'Time & attendance logging',
+        'Client portal access',
+      ],
+    },
+    {
+      code: 'SOLE_GROWTH',
+      name: 'Sole Growth',
+      description: 'For growing independent contractors taking on larger or multiple projects.',
+      targetAccountType: 'INDIVIDUAL' as const,
+      monthlyPrice: 39,
+      annualPrice: 374,
+      sortOrder: 2,
+      limits: { maxProjects: 25, maxUsers: 5, storageGb: 30 },
+      features: [
+        'Up to 5 user seats',
+        '25 active projects',
+        '30 GB document storage',
+        'Quotes, variations & invoices',
+        'Budget & financial control',
+        'Subcontractor management',
+        'Advanced reporting',
+        'Everything in Sole Starter',
+      ],
+    },
+    {
+      code: 'SOLE_PROFESSIONAL',
+      name: 'Sole Professional',
+      description: 'For established contractors managing large-scale projects and teams.',
+      targetAccountType: 'INDIVIDUAL' as const,
+      monthlyPrice: 59,
+      annualPrice: 566,
+      sortOrder: 3,
+      limits: { maxProjects: 50, maxUsers: 10, storageGb: 100 },
       features: [
         'Up to 10 user seats',
-        '20 active projects',
-        '50 GB storage',
+        '50 active projects',
+        '100 GB document storage',
+        'Priority support',
+        'Custom workflow templates',
+        'Everything in Sole Growth',
+      ],
+    },
+    // Backward-compat alias for SOLE_GROWTH
+    {
+      code: 'SOLE_PRO',
+      name: 'Sole Pro',
+      description: 'Legacy plan — equivalent to Sole Growth.',
+      targetAccountType: 'INDIVIDUAL' as const,
+      monthlyPrice: 39,
+      annualPrice: 374,
+      sortOrder: 99,
+      limits: { maxProjects: 25, maxUsers: 5, storageGb: 30 },
+      features: [],
+    },
+  ];
+
+  // Company plans
+  const PLATFORM_PLANS = [
+    {
+      code: 'TEAM',
+      name: 'Team',
+      description: 'For small construction companies with up to 15 staff.',
+      targetAccountType: 'COMPANY' as const,
+      monthlyPrice: 79,
+      annualPrice: 758,
+      sortOrder: 4,
+      limits: { maxProjects: 50, maxUsers: 15, storageGb: 100 },
+      features: [
+        'Up to 15 user seats',
+        '50 active projects',
+        '100 GB storage',
         'Team time tracking & approval',
         'Quotes, variations & invoices',
         'Budget & financial control',
-        'Customer Relationship Management (CRM)',
+        'CRM',
         'Messaging & reporting',
-        'Need more users? Contact your account admin to expand your seat count.',
       ],
     },
     {
@@ -254,19 +337,17 @@ async function main() {
       name: 'Business',
       description: 'For growing companies managing multiple large projects and teams.',
       targetAccountType: 'COMPANY' as const,
-      monthlyPrice: 280,
-      annualPrice: 2688, // ~20% off
-      sortOrder: 2,
-      limits: { maxProjects: -1, maxUsers: 50, storageGb: 200 },
+      monthlyPrice: 149,
+      annualPrice: 1430,
+      sortOrder: 5,
+      limits: { maxProjects: 200, maxUsers: 50, storageGb: 500 },
       features: [
         'Up to 50 user seats',
-        'Unlimited projects',
-        '200 GB storage',
+        '200 active projects',
+        '500 GB storage',
         'Advanced reporting & exports',
-        'Subscription payment management',
         'Priority email support',
-        'Need more users? Contact your account admin to expand your seat count.',
-        'Everything in Small Business',
+        'Everything in Team',
       ],
     },
     {
@@ -274,24 +355,37 @@ async function main() {
       name: 'Enterprise',
       description: 'Full platform access for large construction businesses.',
       targetAccountType: 'COMPANY' as const,
-      monthlyPrice: 560,
-      annualPrice: 5376, // ~20% off
-      sortOrder: 3,
-      limits: { maxProjects: -1, maxUsers: 100, storageGb: -1 },
+      monthlyPrice: 299,
+      annualPrice: 2870,
+      sortOrder: 6,
+      limits: { maxProjects: -1, maxUsers: -1, storageGb: -1 },
       features: [
-        'Up to 100 user seats',
+        'Unlimited user seats',
         'Unlimited projects',
-        'Unlimited storage',
+        'Unlimited storage (2 TB base)',
         'Priority support & SLA',
         'Custom integrations',
         'White-label options',
-        'Need more than 100 users? Contact your account admin for a custom seat agreement.',
         'Everything in Business',
       ],
     },
+    // Backward-compat alias for TEAM
+    {
+      code: 'SMALL_BUSINESS',
+      name: 'Small Business',
+      description: 'Legacy plan — equivalent to Team.',
+      targetAccountType: 'COMPANY' as const,
+      monthlyPrice: 70,
+      annualPrice: 672,
+      sortOrder: 98,
+      limits: { maxProjects: 20, maxUsers: 10, storageGb: 50 },
+      features: [],
+    },
   ];
 
-  for (const plan of PLATFORM_PLANS) {
+  const ALL_PLANS = [...INDIVIDUAL_PLANS, ...PLATFORM_PLANS];
+
+  for (const plan of ALL_PLANS) {
     await prisma.platformPlan.upsert({
       where: { code: plan.code },
       create: {
@@ -320,15 +414,100 @@ async function main() {
     });
   }
 
+  // ─── Subscription Config (singleton) ─────────────────────────────────────
+  const existingConfig = await prisma.platformSubscriptionConfig.findFirst();
+  if (!existingConfig) {
+    await prisma.platformSubscriptionConfig.create({
+      data: {
+        trialDays: 14,
+        gracePeriodDays: 0,
+        trialReminderDays: [7, 3, 1],
+        expiredReminderDays: [1, 3, 7],
+      },
+    });
+  }
+
   // eslint-disable-next-line no-console
   console.log(`Seed complete for company ${company.slug} and owner ${owner.email}`);
   // eslint-disable-next-line no-console
   console.log(`Seeded ${platformAdminSeeds.length} platform admin user(s)`);
   // eslint-disable-next-line no-console
-  console.log(`Seeded ${PLATFORM_PLANS.length} platform subscription plans`);
+  console.log(`Seeded ${ALL_PLANS.length} platform subscription plans (${INDIVIDUAL_PLANS.length} individual, ${PLATFORM_PLANS.length} company)`);
+}
+
+async function backfillExistingAccounts() {
+  const companies = await prisma.company.findMany({
+    where: { deletedAt: null },
+    select: { id: true, slug: true },
+  });
+
+  let count = 0;
+  for (const company of companies) {
+    const companyId = company.id;
+
+    // CompanySettings
+    const existingSettings = await (prisma as any).companySettings.findUnique({ where: { companyId } });
+    if (!existingSettings) {
+      await (prisma as any).companySettings.create({ data: { companyId } });
+    }
+
+    // Default sectors
+    await (prisma as any).tenantSector.createMany({
+      data: DEFAULT_SECTORS
+        .map((code: string) => CONSTRUCTION_SECTORS.find((s) => s.code === code)!)
+        .map((s: { code: string; name: string }) => ({ companyId, code: s.code, name: s.name })),
+      skipDuplicates: true,
+    });
+
+    // Default project types
+    await (prisma as any).tenantProjectType.createMany({
+      data: DEFAULT_PROJECT_TYPES
+        .map((code: string) => CONSTRUCTION_PROJECT_TYPES.find((p) => p.code === code)!)
+        .map((p: { code: string; name: string }) => ({ companyId, code: p.code, name: p.name })),
+      skipDuplicates: true,
+    });
+
+    // Default stakeholders
+    for (const type of DEFAULT_STAKEHOLDERS) {
+      const def = STAKEHOLDER_TYPES[type];
+      if (!def) continue;
+      const existing = await (prisma as any).tenantStakeholder.findFirst({ where: { companyId, type } });
+      if (existing) continue;
+      let role = await prisma.role.findFirst({ where: { companyId, name: def.name, deletedAt: null } });
+      if (!role) {
+        role = await prisma.role.create({
+          data: { companyId, name: def.name, description: def.description, isSystem: false },
+        });
+      }
+      await (prisma as any).tenantStakeholder.create({
+        data: { companyId, type, name: def.name, roleId: role.id },
+      });
+    }
+
+    // Default workflow templates
+    await (prisma as any).workflowTemplate.createMany({
+      data: DEFAULT_WORKFLOWS
+        .filter((code: string) => WORKFLOW_TEMPLATES[code])
+        .map((code: string) => ({
+          companyId,
+          code,
+          name: WORKFLOW_TEMPLATES[code].name,
+          description: WORKFLOW_TEMPLATES[code].description,
+          stages: WORKFLOW_TEMPLATES[code].stages,
+          isEnabled: true,
+        })),
+      skipDuplicates: true,
+    });
+
+    count++;
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(`Back-filled ${count} existing company workspace(s)`);
 }
 
 main()
+  .then(() => backfillExistingAccounts())
   .catch(async (error) => {
     // eslint-disable-next-line no-console
     console.error(error);

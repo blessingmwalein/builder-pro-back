@@ -165,6 +165,37 @@ enum EmploymentType {
   CASUAL
 }
 
+enum StageStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+  SKIPPED
+}
+
+enum ChangeRequestType {
+  CLIENT_INITIATED
+  INTERNAL
+  DESIGN_CHANGE
+  SCOPE_CHANGE
+}
+
+enum ChangeRequestStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  IMPLEMENTED
+}
+
+enum DocumentApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
 model Company {
   id                    String                 @id @default(cuid())
   companyId             String                 @unique
@@ -179,6 +210,16 @@ model Company {
   countryCode           String                 @default("ZW")
   defaultCurrency       String                 @default("USD")
   timezone              String                 @default("Africa/Harare")
+  legalName             String?
+  registrationNumber    String?
+  taxNumber             String?
+  website               String?
+  companySize           String?
+  yearsOperating        Int?
+  description           String?
+  businessPhone         String?
+  businessEmail         String?
+  city                  String?
   isActive              Boolean                @default(true)
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
@@ -221,6 +262,23 @@ model Company {
   subscriptions         Subscription[]
   webhooks              IntegrationWebhook[]
   auditLogs             AuditLog[]
+  individualProfile     IndividualBusinessProfile?
+  sectors               TenantSector[]
+  projectTypes          TenantProjectType[]
+  stakeholders          TenantStakeholder[]
+  workflows             WorkflowTemplate[]
+  settings              CompanySettings?
+  projectStages         ProjectStage[]
+  changeRequests        ChangeRequest[]
+  clientUsers           ClientUser[]
+  templates             ProjectTemplate[]
+  purchaseRequests      PurchaseRequest[]
+  purchaseOrders        PurchaseOrder[]
+  deliveryNotes         DeliveryNote[]
+  approvalRequests      ApprovalRequest[]
+  equipmentCategories   EquipmentCategory[]
+  equipment             Equipment[]
+  equipmentAllocations  EquipmentAllocation[]
 
   @@index([isActive, deletedAt])
 }
@@ -260,6 +318,17 @@ model User {
   audits              AuditLog[]      @relation("AuditActor")
   generatedReports    Report[]        @relation("ReportGenerator")
   projectMemberships  ProjectMember[]
+  clientPortalLinks   ClientUser[]    @relation("ClientPortalUser")
+  approvedStages      ProjectStage[]  @relation("StageApprover")
+  requestedCRs        ChangeRequest[] @relation("CRRequester")
+  reviewedCRs         ChangeRequest[] @relation("CRReviewer")
+  approvedCRs         ChangeRequest[] @relation("CRApprover")
+  requestedPRs        PurchaseRequest[] @relation("PRRequester")
+  approvedPRs         PurchaseRequest[] @relation("PRApprover")
+  receivedDeliveries  DeliveryNote[]
+  requestedApprovals   ApprovalRequest[]    @relation("ApprovalRequester")
+  approvalSteps        ApprovalStep[]
+  equipmentAllocations EquipmentAllocation[]
 
   @@unique([companyId, email])
   @@index([companyId, isActive, deletedAt])
@@ -286,9 +355,10 @@ model Role {
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   deletedAt   DateTime?
-  company     Company          @relation(fields: [companyId], references: [id])
-  userRoles   UserRole[]
-  permissions RolePermission[]
+  company      Company           @relation(fields: [companyId], references: [id])
+  userRoles    UserRole[]
+  permissions  RolePermission[]
+  stakeholders TenantStakeholder[]
 
   @@unique([companyId, name])
   @@index([companyId, deletedAt])
@@ -351,6 +421,8 @@ model Project {
   siteAddress        String?
   gpsLat             Decimal?         @db.Decimal(10, 7)
   gpsLng             Decimal?         @db.Decimal(10, 7)
+  templateId         String?
+  priority           Priority?
   status             ProjectStatus    @default(DRAFT)
   startDate          DateTime?
   endDate            DateTime?
@@ -381,23 +453,29 @@ model Project {
   documents          Document[]
   members            ProjectMember[]
   materialPurchases  MaterialPurchase[]
+  stages             ProjectStage[]
+  changeRequests     ChangeRequest[]
+  template           ProjectTemplate?   @relation(fields: [templateId], references: [id])
+  purchaseRequests   PurchaseRequest[]
+  equipmentAllocations EquipmentAllocation[]
 
   @@unique([companyId, code])
   @@index([companyId, status, deletedAt])
 }
 
 model ProjectMember {
-  id        String   @id @default(cuid())
-  companyId String
-  projectId String
-  userId    String
-  role      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  company   Company  @relation(fields: [companyId], references: [id])
-  project   Project  @relation(fields: [projectId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  id          String   @id @default(cuid())
+  companyId   String
+  projectId   String
+  userId      String
+  role        String?
+  permissions Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  company     Company  @relation(fields: [companyId], references: [id])
+  project     Project  @relation(fields: [projectId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 
   @@unique([companyId, projectId, userId])
   @@index([companyId, projectId, deletedAt])
@@ -407,6 +485,7 @@ model Task {
   id             String            @id @default(cuid())
   companyId      String
   projectId      String
+  stageId        String?
   parentTaskId   String?
   title          String
   description    String?
@@ -420,6 +499,7 @@ model Task {
   deletedAt      DateTime?
   company        Company           @relation(fields: [companyId], references: [id])
   project        Project           @relation(fields: [projectId], references: [id])
+  stage          ProjectStage?     @relation(fields: [stageId], references: [id])
   parentTask     Task?             @relation("TaskHierarchy", fields: [parentTaskId], references: [id])
   subtasks       Task[]            @relation("TaskHierarchy")
   assignees      TaskAssignee[]
@@ -429,6 +509,7 @@ model Task {
   timeEntries    TimeEntry[]
 
   @@index([companyId, projectId, status, dueDate])
+  @@index([companyId, projectId, stageId])
   @@index([companyId, deletedAt])
 }
 
@@ -560,10 +641,11 @@ model Supplier {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   deletedAt   DateTime?
-  company     Company       @relation(fields: [companyId], references: [id])
-  materials   Material[]
-  materialLogs MaterialLog[]
-  purchases   MaterialPurchase[]
+  company       Company         @relation(fields: [companyId], references: [id])
+  materials     Material[]
+  materialLogs  MaterialLog[]
+  purchases     MaterialPurchase[]
+  purchaseOrders PurchaseOrder[]
 
   @@unique([companyId, name])
   @@index([companyId, deletedAt])
@@ -648,7 +730,10 @@ model Material {
   supplier          Supplier?     @relation(fields: [supplierId], references: [id])
   categoryRef       MaterialCategory? @relation(fields: [categoryId], references: [id])
   logs              MaterialLog[]
-  quoteLineItems    QuoteLineItem[]
+  quoteLineItems         QuoteLineItem[]
+  purchaseRequestItems   PurchaseRequestItem[]
+  purchaseOrderItems     PurchaseOrderItem[]
+  deliveryNoteItems      DeliveryNoteItem[]
 
   @@unique([companyId, sku])
   @@unique([companyId, externalSource, externalProductId])
@@ -660,7 +745,7 @@ model Material {
 model MaterialLog {
   id          String   @id @default(cuid())
   companyId   String
-  projectId   String
+  projectId   String?
   taskId      String?
   materialId  String
   supplierId  String?
@@ -678,7 +763,7 @@ model MaterialLog {
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?
   company     Company  @relation(fields: [companyId], references: [id])
-  project     Project  @relation(fields: [projectId], references: [id])
+  project     Project? @relation(fields: [projectId], references: [id])
   material    Material @relation(fields: [materialId], references: [id])
   supplier    Supplier? @relation(fields: [supplierId], references: [id])
   purchase    MaterialPurchase? @relation(fields: [purchaseId], references: [id])
@@ -996,6 +1081,7 @@ model Client {
   projects          Project[]
   quotes            Quote[]
   invoices          Invoice[]
+  clientUsers       ClientUser[]
 
   @@index([companyId, deletedAt])
 }
@@ -1086,29 +1172,40 @@ model Notification {
 }
 
 model Document {
-  id          String       @id @default(cuid())
-  companyId   String
-  projectId   String?
-  taskId      String?
-  messageId   String?
-  uploaderId  String?
-  type        DocumentType @default(OTHER)
-  fileKey     String
-  fileName    String
-  contentType String
-  sizeBytes   Int
-  folder      String?
-  gpsLat      Decimal?     @db.Decimal(10, 7)
-  gpsLng      Decimal?     @db.Decimal(10, 7)
-  metadata    Json?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  deletedAt   DateTime?
-  company     Company      @relation(fields: [companyId], references: [id])
-  project     Project?     @relation(fields: [projectId], references: [id])
-  message     Message?     @relation(fields: [messageId], references: [id])
+  id               String                  @id @default(cuid())
+  companyId        String
+  projectId        String?
+  stageId          String?
+  taskId           String?
+  messageId        String?
+  uploaderId       String?
+  type             DocumentType            @default(OTHER)
+  fileKey          String
+  fileName         String
+  contentType      String
+  sizeBytes        Int
+  folder           String?
+  isRequired       Boolean                 @default(false)
+  gpsLat           Decimal?                @db.Decimal(10, 7)
+  gpsLng           Decimal?                @db.Decimal(10, 7)
+  metadata         Json?
+  version          Int                     @default(1)
+  approvalStatus   DocumentApprovalStatus? @default(PENDING)
+  expiresAt        DateTime?
+  parentDocumentId String?
+  approvedById     String?
+  approvedAt       DateTime?
+  approvalNotes    String?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  deletedAt        DateTime?
+  company          Company                 @relation(fields: [companyId], references: [id])
+  project          Project?                @relation(fields: [projectId], references: [id])
+  stage            ProjectStage?           @relation(fields: [stageId], references: [id])
+  message          Message?                @relation(fields: [messageId], references: [id])
 
   @@index([companyId, projectId, deletedAt])
+  @@index([companyId, projectId, stageId, deletedAt])
   @@index([companyId, messageId, deletedAt])
 }
 
@@ -1190,6 +1287,51 @@ model PlatformPlan {
   @@index([isActive, deletedAt])
 }
 
+enum PromoDiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+// Promo / voucher codes — created in platform admin, redeemed at subscription activation.
+model PromoCode {
+  id             String            @id @default(cuid())
+  code           String            @unique
+  description    String?
+  discountType   PromoDiscountType @default(PERCENTAGE)
+  discountValue  Decimal           @db.Decimal(10, 2)
+  maxUses        Int?
+  usedCount      Int               @default(0)
+  expiresAt      DateTime?
+  isActive       Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deletedAt      DateTime?
+  redemptions    PromoCodeRedemption[]
+
+  @@index([code, isActive, deletedAt])
+}
+
+// Tracks which company used which promo code.
+model PromoCodeRedemption {
+  id          String    @id @default(cuid())
+  promoCodeId String
+  companyId   String
+  usedAt      DateTime  @default(now())
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
+
+  @@unique([promoCodeId, companyId])
+}
+
+// Singleton row — platform admin configures subscription behaviour here.
+model PlatformSubscriptionConfig {
+  id                  String   @id @default(cuid())
+  trialDays           Int      @default(14)
+  gracePeriodDays     Int      @default(0)
+  trialReminderDays   Json     @default("[7, 3, 1]")
+  expiredReminderDays Json     @default("[1, 3, 7]")
+  updatedAt           DateTime @updatedAt
+}
+
 model IntegrationWebhook {
   id            String   @id @default(cuid())
   companyId     String
@@ -1227,4 +1369,520 @@ model AuditLog {
 
   @@index([companyId, entity, entityId, createdAt])
   @@index([companyId, actorId, createdAt])
+}
+
+model IndividualBusinessProfile {
+  id                 String   @id @default(cuid())
+  companyId          String   @unique
+  businessName       String
+  description        String?
+  logoUrl            String?
+  logoKey            String?
+  yearsOperating     Int?
+  primarySector      String?
+  businessSize       String?
+  phone              String?
+  businessEmail      String?
+  registrationNumber String?
+  taxNumber          String?
+  serviceAreas       String[] @default([])
+  country            String?
+  city               String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  company            Company  @relation(fields: [companyId], references: [id])
+}
+
+model TenantSector {
+  id        String   @id @default(cuid())
+  companyId String
+  code      String
+  name      String
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, code])
+}
+
+model TenantProjectType {
+  id        String   @id @default(cuid())
+  companyId String
+  code      String
+  name      String
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, code])
+}
+
+model TenantStakeholder {
+  id        String   @id @default(cuid())
+  companyId String
+  type      String
+  name      String
+  roleId    String?
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id])
+  role      Role?    @relation(fields: [roleId], references: [id])
+
+  @@unique([companyId, type])
+}
+
+model WorkflowTemplate {
+  id          String   @id @default(cuid())
+  companyId   String
+  code        String
+  name        String
+  description String?
+  isEnabled   Boolean  @default(true)
+  stages      Json     @default("[]")
+  createdAt   DateTime @default(now())
+  company     Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, code])
+}
+
+model CompanySettings {
+  id                   String   @id @default(cuid())
+  companyId            String   @unique
+  currency             String   @default("USD")
+  taxRate              Float    @default(15)
+  taxName              String   @default("VAT")
+  invoicePrefix        String   @default("INV")
+  invoiceNextNumber    Int      @default(1)
+  quotePrefix          String   @default("QUO")
+  quoteNextNumber      Int      @default(1)
+  purchaseOrderPrefix  String   @default("PO")
+  purchaseOrderNext    Int      @default(1)
+  approvalRequired     Boolean  @default(false)
+  notificationsEnabled Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  company              Company  @relation(fields: [companyId], references: [id])
+}
+
+model ProjectStage {
+  id               String      @id @default(cuid())
+  companyId        String
+  projectId        String
+  workflowCode     String
+  stageName        String
+  stageOrder       Int
+  status           StageStatus @default(PENDING)
+  plannedStartDate DateTime?
+  plannedEndDate   DateTime?
+  actualStartDate  DateTime?
+  actualEndDate    DateTime?
+  requiresApproval Boolean     @default(false)
+  approvedById     String?
+  approvedAt       DateTime?
+  approvalNotes    String?
+  notes            String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  company          Company     @relation(fields: [companyId], references: [id])
+  project          Project     @relation(fields: [projectId], references: [id])
+  approvedBy       User?       @relation("StageApprover", fields: [approvedById], references: [id])
+  tasks            Task[]
+  documents        Document[]
+
+  @@unique([companyId, projectId, workflowCode, stageOrder])
+  @@index([companyId, projectId])
+}
+
+model ChangeRequest {
+  id              String              @id @default(cuid())
+  companyId       String
+  projectId       String
+  requestNumber   String
+  title           String
+  description     String
+  type            ChangeRequestType   @default(CLIENT_INITIATED)
+  status          ChangeRequestStatus @default(DRAFT)
+  requestedById   String
+  reviewedById    String?
+  approvedById    String?
+  estimatedCost   Decimal?            @db.Decimal(18, 2)
+  estimatedDays   Int?
+  approvedCost    Decimal?            @db.Decimal(18, 2)
+  approvedDays    Int?
+  reviewNotes     String?
+  approvalNotes   String?
+  rejectionNotes  String?
+  reviewedAt      DateTime?
+  approvedAt      DateTime?
+  rejectedAt      DateTime?
+  implementedAt   DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?
+  company         Company             @relation(fields: [companyId], references: [id])
+  project         Project             @relation(fields: [projectId], references: [id])
+  requestedBy     User                @relation("CRRequester", fields: [requestedById], references: [id])
+  reviewedBy      User?               @relation("CRReviewer", fields: [reviewedById], references: [id])
+  approvedBy      User?               @relation("CRApprover", fields: [approvedById], references: [id])
+  items           ChangeRequestItem[]
+
+  @@unique([companyId, requestNumber])
+  @@index([companyId, projectId])
+}
+
+model ChangeRequestItem {
+  id              String        @id @default(cuid())
+  changeRequestId String
+  description     String
+  category        String?
+  quantity        Decimal?      @db.Decimal(14, 3)
+  unitCost        Decimal?      @db.Decimal(12, 2)
+  estimatedCost   Decimal?      @db.Decimal(18, 2)
+  createdAt       DateTime      @default(now())
+  changeRequest   ChangeRequest @relation(fields: [changeRequestId], references: [id])
+}
+
+model ClientUser {
+  id                   String   @id @default(cuid())
+  companyId            String
+  clientId             String
+  userId               String
+  canViewProgress      Boolean  @default(true)
+  canApproveMilestones Boolean  @default(false)
+  canReviewInvoices    Boolean  @default(false)
+  canSubmitChanges     Boolean  @default(false)
+  canTrackPayments     Boolean  @default(false)
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  company              Company  @relation(fields: [companyId], references: [id])
+  client               Client   @relation(fields: [clientId], references: [id])
+  user                 User     @relation("ClientPortalUser", fields: [userId], references: [id])
+
+  @@unique([companyId, clientId, userId])
+  @@index([companyId, clientId])
+}
+
+model ProjectTemplate {
+  id               String                 @id @default(cuid())
+  companyId        String
+  name             String
+  description      String?
+  constructionType String?
+  isArchived       Boolean                @default(false)
+  isDefault        Boolean                @default(false)
+  version          Int                    @default(1)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  deletedAt        DateTime?
+  company          Company                @relation(fields: [companyId], references: [id])
+  stages           TemplateStage[]
+  tasks            TemplateTask[]
+  documents        TemplateDocument[]
+  roles            TemplateRole[]
+  budgetLines      TemplateBudgetLine[]
+  approvalRules    TemplateApprovalRule[]
+  projects         Project[]
+
+  @@index([companyId, isArchived, deletedAt])
+}
+
+model TemplateStage {
+  id               String          @id @default(cuid())
+  templateId       String
+  workflowCode     String
+  stageOrder       Int
+  isRequired       Boolean         @default(true)
+  requiresApproval Boolean         @default(false)
+  approvalRoles    String[]        @default([])
+  template         ProjectTemplate @relation(fields: [templateId], references: [id])
+  tasks            TemplateTask[]
+  documents        TemplateDocument[]
+
+  @@index([templateId])
+}
+
+model TemplateTask {
+  id          String          @id @default(cuid())
+  templateId  String
+  stageId     String?
+  title       String
+  description String?
+  roleCode    String?
+  priority    Priority        @default(MEDIUM)
+  order       Int             @default(0)
+  template    ProjectTemplate @relation(fields: [templateId], references: [id])
+  stage       TemplateStage?  @relation(fields: [stageId], references: [id])
+
+  @@index([templateId])
+}
+
+model TemplateDocument {
+  id               String          @id @default(cuid())
+  templateId       String
+  stageId          String?
+  documentType     DocumentType
+  name             String
+  description      String?
+  isRequired       Boolean         @default(true)
+  requiresApproval Boolean         @default(false)
+  template         ProjectTemplate @relation(fields: [templateId], references: [id])
+  stage            TemplateStage?  @relation(fields: [stageId], references: [id])
+
+  @@index([templateId])
+}
+
+model TemplateRole {
+  id         String          @id @default(cuid())
+  templateId String
+  roleCode   String
+  isRequired Boolean         @default(false)
+  template   ProjectTemplate @relation(fields: [templateId], references: [id])
+
+  @@index([templateId])
+}
+
+model TemplateBudgetLine {
+  id           String          @id @default(cuid())
+  templateId   String
+  categoryCode String
+  suggestedPct Decimal?        @db.Decimal(5, 2)
+  template     ProjectTemplate @relation(fields: [templateId], references: [id])
+
+  @@index([templateId])
+}
+
+model TemplateApprovalRule {
+  id            String          @id @default(cuid())
+  templateId    String
+  entityType    String
+  approverRoles String[]        @default([])
+  minApprovers  Int             @default(1)
+  template      ProjectTemplate @relation(fields: [templateId], references: [id])
+
+  @@index([templateId])
+}
+
+// ─── Phase 2: Procurement ───────────────────────────────────────────────────
+
+enum PurchaseRequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  ORDERED
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  PARTIAL
+  RECEIVED
+  CANCELLED
+}
+
+model PurchaseRequest {
+  id             String                @id @default(cuid())
+  companyId      String
+  projectId      String?
+  requestedById  String
+  prNumber       String
+  status         PurchaseRequestStatus @default(DRAFT)
+  notes          String?
+  approvedById   String?
+  approvedAt     DateTime?
+  rejectedAt     DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  deletedAt      DateTime?
+  company        Company               @relation(fields: [companyId], references: [id])
+  project        Project?              @relation(fields: [projectId], references: [id])
+  requestedBy    User                  @relation("PRRequester", fields: [requestedById], references: [id])
+  approvedBy     User?                 @relation("PRApprover", fields: [approvedById], references: [id])
+  items          PurchaseRequestItem[]
+  orders         PurchaseOrder[]
+
+  @@unique([companyId, prNumber])
+  @@index([companyId, status, deletedAt])
+}
+
+model PurchaseRequestItem {
+  id                String           @id @default(cuid())
+  purchaseRequestId String
+  materialId        String?
+  description       String
+  quantity          Decimal          @db.Decimal(14, 3)
+  unit              String
+  estimatedUnitCost Decimal?         @db.Decimal(12, 2)
+  purchaseRequest   PurchaseRequest  @relation(fields: [purchaseRequestId], references: [id])
+  material          Material?        @relation(fields: [materialId], references: [id])
+
+  @@index([purchaseRequestId])
+}
+
+model PurchaseOrder {
+  id                String              @id @default(cuid())
+  companyId         String
+  purchaseRequestId String?
+  supplierId        String
+  poNumber          String
+  status            PurchaseOrderStatus @default(DRAFT)
+  totalAmount       Decimal             @default(0) @db.Decimal(18, 2)
+  expectedDelivery  DateTime?
+  deliveredAt       DateTime?
+  notes             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime?
+  company           Company             @relation(fields: [companyId], references: [id])
+  supplier          Supplier            @relation(fields: [supplierId], references: [id])
+  purchaseRequest   PurchaseRequest?    @relation(fields: [purchaseRequestId], references: [id])
+  items             PurchaseOrderItem[]
+  deliveryNotes     DeliveryNote[]
+
+  @@unique([companyId, poNumber])
+  @@index([companyId, status, deletedAt])
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  materialId      String?
+  description     String
+  quantity        Decimal       @db.Decimal(14, 3)
+  unitCost        Decimal       @db.Decimal(12, 2)
+  totalCost       Decimal       @db.Decimal(18, 2)
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  material        Material?     @relation(fields: [materialId], references: [id])
+
+  @@index([purchaseOrderId])
+}
+
+model DeliveryNote {
+  id              String          @id @default(cuid())
+  companyId       String
+  purchaseOrderId String
+  deliveryDate    DateTime
+  notes           String?
+  receivedById    String
+  createdAt       DateTime        @default(now())
+  company         Company         @relation(fields: [companyId], references: [id])
+  purchaseOrder   PurchaseOrder   @relation(fields: [purchaseOrderId], references: [id])
+  receivedBy      User            @relation(fields: [receivedById], references: [id])
+  items           DeliveryNoteItem[]
+
+  @@index([companyId, purchaseOrderId])
+}
+
+model DeliveryNoteItem {
+  id               String       @id @default(cuid())
+  deliveryNoteId   String
+  materialId       String?
+  description      String
+  quantityOrdered  Decimal      @db.Decimal(14, 3)
+  quantityReceived Decimal      @db.Decimal(14, 3)
+  deliveryNote     DeliveryNote @relation(fields: [deliveryNoteId], references: [id])
+  material         Material?    @relation(fields: [materialId], references: [id])
+
+  @@index([deliveryNoteId])
+}
+
+// ─── Approvals ───────────────────────────────────────────────────────────────
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model ApprovalRequest {
+  id              String         @id @default(cuid())
+  companyId       String
+  entityType      String
+  entityId        String
+  requestedById   String
+  status          ApprovalStatus @default(PENDING)
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  company         Company        @relation(fields: [companyId], references: [id])
+  requestedBy     User           @relation("ApprovalRequester", fields: [requestedById], references: [id])
+  steps           ApprovalStep[]
+
+  @@index([companyId, entityType, status])
+  @@index([companyId, entityId])
+}
+
+model ApprovalStep {
+  id                String          @id @default(cuid())
+  approvalRequestId String
+  stepOrder         Int
+  approverId        String
+  status            ApprovalStatus  @default(PENDING)
+  comment           String?
+  decidedAt         DateTime?
+  approvalRequest   ApprovalRequest @relation(fields: [approvalRequestId], references: [id])
+  approver          User            @relation(fields: [approverId], references: [id])
+
+  @@index([approvalRequestId])
+  @@index([approverId, status])
+}
+
+// ─── Equipment & Inventory ───────────────────────────────────────────────────
+
+enum EquipmentStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  RETIRED
+}
+
+model EquipmentCategory {
+  id        String      @id @default(cuid())
+  companyId String
+  name      String
+  createdAt DateTime    @default(now())
+  company   Company     @relation(fields: [companyId], references: [id])
+  equipment Equipment[]
+
+  @@unique([companyId, name])
+}
+
+model Equipment {
+  id           String              @id @default(cuid())
+  companyId    String
+  categoryId   String?
+  name         String
+  description  String?
+  serialNumber String?
+  status       EquipmentStatus     @default(AVAILABLE)
+  dailyRate    Decimal?            @db.Decimal(10, 2)
+  purchaseCost Decimal?            @db.Decimal(18, 2)
+  purchasedAt  DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  deletedAt    DateTime?
+  company      Company             @relation(fields: [companyId], references: [id])
+  category     EquipmentCategory?  @relation(fields: [categoryId], references: [id])
+  allocations  EquipmentAllocation[]
+
+  @@index([companyId, status, deletedAt])
+}
+
+model EquipmentAllocation {
+  id            String     @id @default(cuid())
+  companyId     String
+  equipmentId   String
+  projectId     String
+  allocatedById String
+  startDate     DateTime
+  endDate       DateTime?
+  returnedAt    DateTime?
+  notes         String?
+  createdAt     DateTime   @default(now())
+  company       Company    @relation(fields: [companyId], references: [id])
+  equipment     Equipment  @relation(fields: [equipmentId], references: [id])
+  project       Project    @relation(fields: [projectId], references: [id])
+  allocatedBy   User       @relation(fields: [allocatedById], references: [id])
+
+  @@index([companyId, equipmentId])
+  @@index([companyId, projectId])
 }

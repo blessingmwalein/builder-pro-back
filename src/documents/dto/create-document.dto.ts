@@ -44,4 +44,14 @@ export class CreateDocumentDto {
   @IsOptional()
   @IsNumber()
   gpsLng?: number;
+
+  @ApiPropertyOptional({ description: 'ISO date string for document expiry' })
+  @IsOptional()
+  @IsString()
+  expiresAt?: string;
+
+  @ApiPropertyOptional({ description: 'ID of the document this is a new version of' })
+  @IsOptional()
+  @IsString()
+  parentDocumentId?: string;
 }

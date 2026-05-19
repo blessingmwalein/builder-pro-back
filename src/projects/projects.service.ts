@@ -9,16 +9,21 @@ import { AddProjectMemberDto } from './dto/add-project-member.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { QueryProjectsDto } from './dto/query-projects.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { PROJECT_TYPE_DEFAULT_STAGES } from '../onboarding/onboarding.constants';
+import { ProjectTemplatesService } from '../project-templates/project-templates.service';
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly templateService: ProjectTemplatesService,
+  ) {}
 
   async create(companyId: string, dto: CreateProjectDto) {
     await enforcePlanLimit(this.prisma, companyId, 'projects');
     const code = await this.resolveProjectCode(companyId, dto.code, dto.name);
 
-    return this.prisma.project.create({
+    const project = await (this.prisma as any).project.create({
       data: {
         companyId,
         clientId: dto.clientId,
@@ -32,11 +37,60 @@ export class ProjectsService {
         startDate: dto.startDate ? new Date(dto.startDate) : undefined,
         endDate: dto.endDate ? new Date(dto.endDate) : undefined,
         baselineBudget: dto.baselineBudget,
+        templateId: dto.templateId ?? null,
+        priority: dto.priority ?? null,
       },
       include: {
         client: { select: { id: true, name: true } },
       },
     });
+
+    if (dto.templateId) {
+      await this.templateService.instantiate(
+        companyId,
+        project.id,
+        dto.templateId,
+        dto.baselineBudget,
+      );
+    } else {
+      const workflowCodes =
+        dto.workflowCodes ??
+        (dto.projectType ? PROJECT_TYPE_DEFAULT_STAGES[dto.projectType] ?? PROJECT_TYPE_DEFAULT_STAGES['OTHER'] : null);
+
+      if (workflowCodes && workflowCodes.length > 0) {
+        await this.initializeStages(companyId, project.id, workflowCodes);
+      }
+    }
+
+    return project;
+  }
+
+  private async initializeStages(companyId: string, projectId: string, workflowCodes: string[]) {
+    const templates = await (this.prisma as any).workflowTemplate.findMany({
+      where: { companyId, code: { in: workflowCodes }, isEnabled: true },
+    });
+
+    const createData: any[] = [];
+    for (const tpl of templates) {
+      const stages = Array.isArray(tpl.stages) ? tpl.stages : [];
+      for (const stage of stages as any[]) {
+        createData.push({
+          companyId,
+          projectId,
+          workflowCode: tpl.code,
+          stageName: stage.name,
+          stageOrder: stage.order,
+          requiresApproval: stage.requiresApproval ?? false,
+        });
+      }
+    }
+
+    if (createData.length > 0) {
+      await (this.prisma as any).projectStage.createMany({
+        data: createData,
+        skipDuplicates: true,
+      });
+    }
   }
 
   async findMany(companyId: string, query: QueryProjectsDto) {
@@ -698,7 +752,8 @@ export class ProjectsService {
         projectId,
         userId: dto.userId,
         role: dto.role,
-      },
+        permissions: dto.permissions ?? undefined,
+      } as any,
       include: {
         user: { select: { id: true, firstName: true, lastName: true, email: true } },
       },
@@ -722,7 +777,7 @@ export class ProjectsService {
 
     if (!project) throw new NotFoundException('Project not found');
 
-    return this.prisma.projectMember.findMany({
+    return (this.prisma as any).projectMember.findMany({
       where: { companyId, projectId, deletedAt: null },
       include: {
         user: {
@@ -736,6 +791,204 @@ export class ProjectsService {
           },
         },
       },
+    });
+  }
+
+  // ─── Documents ────────────────────────────────────────────────────────────
+
+  async listDocuments(companyId: string, projectId: string, stageId?: string) {
+    await this.findOne(companyId, projectId);
+    const where: any = { companyId, projectId, deletedAt: null };
+    if (stageId !== undefined) where.stageId = stageId || null;
+    return (this.prisma as any).document.findMany({
+      where,
+      orderBy: [{ stageId: 'asc' }, { createdAt: 'desc' }],
+    });
+  }
+
+  async createDocument(
+    companyId: string,
+    projectId: string,
+    uploaderId: string,
+    data: {
+      name: string;
+      fileName: string;
+      fileKey: string;
+      url: string;
+      contentType: string;
+      sizeBytes: number;
+      type?: string;
+      stageId?: string;
+      isRequired?: boolean;
+    },
+  ) {
+    await this.findOne(companyId, projectId);
+    return (this.prisma as any).document.create({
+      data: {
+        companyId,
+        projectId,
+        stageId: data.stageId || null,
+        uploaderId,
+        fileName: data.name,
+        fileKey: data.fileKey,
+        folder: data.url,
+        contentType: data.contentType,
+        sizeBytes: data.sizeBytes,
+        type: data.type ?? 'OTHER',
+        isRequired: data.isRequired ?? false,
+        version: 1,
+        approvalStatus: 'PENDING',
+      },
+    });
+  }
+
+  async approveDocument(companyId: string, projectId: string, docId: string, approverId: string, notes?: string) {
+    const doc = await (this.prisma as any).document.findFirst({
+      where: { id: docId, companyId, projectId, deletedAt: null },
+    });
+    if (!doc) throw new NotFoundException('Document not found');
+    return (this.prisma as any).document.update({
+      where: { id: docId },
+      data: { approvalStatus: 'APPROVED', approvedById: approverId, approvedAt: new Date(), approvalNotes: notes ?? null },
+    });
+  }
+
+  async removeDocument(companyId: string, projectId: string, docId: string) {
+    const doc = await (this.prisma as any).document.findFirst({
+      where: { id: docId, companyId, projectId, deletedAt: null },
+    });
+    if (!doc) throw new NotFoundException('Document not found');
+    await (this.prisma as any).document.update({
+      where: { id: docId },
+      data: { deletedAt: new Date() },
+    });
+    return { success: true };
+  }
+
+  // ─── Analytics ────────────────────────────────────────────────────────────
+
+  async getAnalytics(companyId: string, projectId: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id: projectId, companyId, deletedAt: null },
+      select: { id: true, name: true, baselineBudget: true, startDate: true, endDate: true, actualCost: true },
+    });
+    if (!project) throw new NotFoundException('Project not found');
+
+    const [stages, tasks, budgets, materialLogs, timeEntries, invoices] = await Promise.all([
+      (this.prisma as any).projectStage.findMany({
+        where: { companyId, projectId },
+        orderBy: { stageOrder: 'asc' },
+      }),
+      this.prisma.task.findMany({
+        where: { companyId, projectId, deletedAt: null, parentTaskId: null },
+        select: { id: true, status: true, stageId: true, dueDate: true },
+      } as any),
+      this.prisma.budget.findMany({
+        where: { companyId, projectId },
+        include: { category: { select: { code: true, name: true } } },
+      }),
+      this.prisma.materialLog.findMany({
+        where: { companyId, projectId, deletedAt: null },
+        select: { materialId: true, entryType: true, quantity: true, totalCost: true, material: { select: { name: true } } },
+      } as any),
+      this.prisma.timeEntry.findMany({
+        where: { companyId, projectId, deletedAt: null },
+        select: { workerId: true, regularHours: true, overtimeHours: true, labourCost: true,
+          worker: { select: { firstName: true, lastName: true } } },
+      } as any),
+      this.prisma.invoice.findMany({
+        where: { companyId, projectId, deletedAt: null },
+        select: { totalAmount: true, paidAmount: true },
+      }),
+    ]);
+
+    // Budget performance
+    const budgetPerformance = budgets.map((b: any) => ({
+      category: b.category?.name ?? b.categoryId,
+      planned: Number(b.plannedAmount),
+      actual: Number(b.actualAmount),
+      variance: Number(b.plannedAmount) - Number(b.actualAmount),
+    }));
+
+    // Task completion by stage
+    const tasksByStage = new Map<string, { total: number; done: number; overdue: number }>();
+    const now = new Date();
+    for (const t of tasks as any[]) {
+      const key = t.stageId ?? '__unassigned__';
+      const stage = stages.find((s: any) => s.id === key);
+      const stageCode = stage?.workflowCode ?? (t.stageId ? t.stageId : 'Unassigned');
+      if (!tasksByStage.has(stageCode)) tasksByStage.set(stageCode, { total: 0, done: 0, overdue: 0 });
+      const entry = tasksByStage.get(stageCode)!;
+      entry.total++;
+      if (t.status === 'DONE') entry.done++;
+      if (t.dueDate && new Date(t.dueDate) < now && t.status !== 'DONE') entry.overdue++;
+    }
+    const taskCompletion = Array.from(tasksByStage.entries()).map(([stageCode, v]) => ({ stageCode, ...v }));
+
+    // Stage timeline
+    const timeline = stages.map((s: any) => {
+      const plannedStart = s.plannedStartDate ? new Date(s.plannedStartDate) : null;
+      const plannedEnd = s.plannedEndDate ? new Date(s.plannedEndDate) : null;
+      const actualStart = s.actualStartDate ? new Date(s.actualStartDate) : null;
+      const actualEnd = s.actualEndDate ? new Date(s.actualEndDate) : null;
+      const plannedDays = plannedStart && plannedEnd
+        ? Math.round((plannedEnd.getTime() - plannedStart.getTime()) / 86400000) : 0;
+      const actualDays = actualStart && actualEnd
+        ? Math.round((actualEnd.getTime() - actualStart.getTime()) / 86400000) : 0;
+      return { stageCode: s.workflowCode, stageName: s.stageName, plannedDays, actualDays, delay: actualDays - plannedDays, status: s.status };
+    });
+
+    // Material usage
+    const matMap = new Map<string, { material: string; actual: number }>();
+    for (const log of materialLogs as any[]) {
+      if (log.entryType === 'PURCHASE') continue;
+      const name = log.material?.name ?? log.materialId;
+      const existing = matMap.get(name);
+      if (existing) existing.actual += Number(log.totalCost);
+      else matMap.set(name, { material: name, actual: Number(log.totalCost) });
+    }
+    const materialUsage = Array.from(matMap.values()).sort((a, b) => b.actual - a.actual).slice(0, 10);
+
+    // Team productivity
+    const workerMap = new Map<string, { member: string; hoursLogged: number; tasksCompleted: number }>();
+    for (const entry of timeEntries as any[]) {
+      const name = entry.worker ? `${entry.worker.firstName} ${entry.worker.lastName}`.trim() : 'Unknown';
+      const hours = Number(entry.regularHours || 0) + Number(entry.overtimeHours || 0);
+      const existing = workerMap.get(name);
+      if (existing) existing.hoursLogged += hours;
+      else workerMap.set(name, { member: name, hoursLogged: hours, tasksCompleted: 0 });
+    }
+
+    // Profitability
+    const revenue = invoices.reduce((s: number, i: any) => s + Number(i.totalAmount), 0);
+    const cost = Number(project.actualCost ?? 0);
+    const margin = revenue - cost;
+
+    return {
+      budgetPerformance,
+      taskCompletion,
+      timeline,
+      materialUsage,
+      teamProductivity: Array.from(workerMap.values()).sort((a, b) => b.hoursLogged - a.hoursLogged),
+      profitability: {
+        revenue,
+        cost,
+        margin,
+        marginPct: revenue > 0 ? Math.round((margin / revenue) * 100) : 0,
+      },
+    };
+  }
+
+  async listStages(companyId: string, projectId: string) {
+    const project = await this.prisma.project.findFirst({
+      where: { id: projectId, companyId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!project) throw new NotFoundException('Project not found');
+    return (this.prisma as any).projectStage.findMany({
+      where: { companyId, projectId },
+      orderBy: { stageOrder: 'asc' },
+      select: { id: true, stageName: true, stageOrder: true, status: true, workflowCode: true },
     });
   }
 

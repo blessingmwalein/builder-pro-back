@@ -1,21 +1,26 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InvoiceStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { BillingService } from '../billing/billing.service';
+import { MailService } from '../mail/mail.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 
 @Injectable()
 export class InvoicesService {
+  private readonly logger = new Logger(InvoicesService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly billingService: BillingService,
+    private readonly mailService: MailService,
   ) {}
 
   async create(companyId: string, dto: CreateInvoiceDto) {
@@ -77,6 +82,7 @@ export class InvoicesService {
         },
         include: {
           client: { select: { id: true, name: true } },
+          project: { select: { id: true, name: true } },
           payments: { where: { deletedAt: null }, orderBy: { createdAt: 'desc' } },
         },
         orderBy: { createdAt: 'desc' },
@@ -174,7 +180,10 @@ export class InvoicesService {
   async send(companyId: string, id: string) {
     const invoice = await this.prisma.invoice.findFirst({
       where: { id, companyId, deletedAt: null },
-      select: { id: true, status: true },
+      include: {
+        client: { select: { id: true, name: true, email: true } },
+        lineItems: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } },
+      },
     });
 
     if (!invoice) throw new NotFoundException('Invoice not found');
@@ -182,10 +191,60 @@ export class InvoicesService {
       throw new BadRequestException('Only draft invoices can be sent');
     }
 
-    return this.prisma.invoice.update({
+    const updated = await this.prisma.invoice.update({
       where: { id },
       data: { status: InvoiceStatus.SENT, sentAt: new Date() },
+      include: {
+        lineItems: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } },
+        client: { select: { id: true, name: true, email: true } },
+      },
     });
+
+    if (invoice.client?.email) {
+      const company = await this.prisma.company.findUnique({
+        where: { id: companyId },
+        select: { name: true, defaultCurrency: true },
+      });
+      const currencySymbol = this.getCurrencySymbol(company?.defaultCurrency);
+      const viewUrl = this.mailService.buildInvoiceUrl(id);
+      const totalAmount = Number(invoice.totalAmount);
+      const subtotal = Number(invoice.subtotal);
+      const taxAmount = Number(invoice.taxAmount ?? 0);
+
+      this.mailService
+        .sendInvoice(invoice.client.email, {
+          clientName: invoice.client.name,
+          invoiceNumber: invoice.invoiceNumber,
+          issueDate: invoice.issueDate
+            ? new Date(invoice.issueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            : '',
+          dueDate: invoice.dueDate
+            ? new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            : undefined,
+          subtotal,
+          taxAmount,
+          total: totalAmount,
+          amountDue: totalAmount,
+          currencySymbol,
+          viewUrl,
+          senderCompanyName: company?.name || 'ownit2buildit',
+          notes: invoice.notes ?? undefined,
+          paymentTerms: invoice.paymentTerms ?? undefined,
+        })
+        .catch((err: Error) =>
+          this.logger.error(`Invoice email to ${invoice.client!.email} failed: ${err.message}`),
+        );
+    }
+
+    return updated;
+  }
+
+  private getCurrencySymbol(code?: string | null): string {
+    const map: Record<string, string> = {
+      USD: '$', EUR: '€', GBP: '£', ZWL: 'Z$', ZAR: 'R',
+      ZMW: 'K', NAD: 'N$', BWP: 'P', KES: 'KSh', NGN: '₦',
+    };
+    return code ? (map[code] ?? code) : '$';
   }
 
   async void(companyId: string, id: string) {

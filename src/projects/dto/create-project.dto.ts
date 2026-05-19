@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsDateString,
   IsEnum,
   IsNumber,
@@ -7,7 +8,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { ProjectStatus, ProjectType } from '@prisma/client';
+import { Priority, ProjectStatus, ProjectType } from '@prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateProjectDto {
@@ -65,4 +66,20 @@ export class CreateProjectDto {
   @IsOptional()
   @IsString()
   clientId?: string;
+
+  @ApiPropertyOptional({ example: ['PROJECT_INITIATION', 'PLANNING', 'EXECUTION', 'HANDOVER'] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  workflowCodes?: string[];
+
+  @ApiPropertyOptional({ description: 'ProjectTemplate ID to instantiate from' })
+  @IsOptional()
+  @IsString()
+  templateId?: string;
+
+  @ApiPropertyOptional({ enum: Priority })
+  @IsOptional()
+  @IsEnum(Priority)
+  priority?: Priority;
 }

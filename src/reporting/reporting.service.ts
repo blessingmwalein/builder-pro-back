@@ -281,4 +281,274 @@ export class ReportingService {
       take: 50,
     });
   }
+
+  // ─── Phase 5 new reports ─────────────────────────────────────────────────────
+
+  async getBudgetVarianceReport(companyId: string, projectId?: string) {
+    const where: any = { companyId, deletedAt: null };
+    if (projectId) where.projectId = projectId;
+
+    const budgets = await this.prisma.budget.findMany({
+      where,
+      include: {
+        category: { select: { name: true, code: true } },
+        project: { select: { id: true, name: true, code: true } },
+      },
+    });
+
+    const rows = budgets.map((b) => {
+      const planned = Number(b.plannedAmount);
+      const actual = Number(b.actualAmount);
+      const variance = planned - actual;
+      const pctUsed = planned > 0 ? Math.round((actual / planned) * 100) : 0;
+      return {
+        projectId: b.projectId,
+        projectName: b.project.name,
+        category: b.category.name,
+        planned,
+        actual,
+        variance,
+        pctUsed,
+        overBudget: actual > planned,
+        atRisk: pctUsed >= b.thresholdPct,
+      };
+    });
+
+    const totals = rows.reduce(
+      (s, r) => ({ planned: s.planned + r.planned, actual: s.actual + r.actual }),
+      { planned: 0, actual: 0 },
+    );
+
+    return {
+      reportType: 'BUDGET_VARIANCE',
+      generatedAt: new Date(),
+      rows,
+      totals: { ...totals, variance: totals.planned - totals.actual },
+      overBudgetCount: rows.filter((r) => r.overBudget).length,
+      atRiskCount: rows.filter((r) => r.atRisk && !r.overBudget).length,
+    };
+  }
+
+  async getDelayReport(companyId: string) {
+    const now = new Date();
+    const projects = await this.prisma.project.findMany({
+      where: { companyId, deletedAt: null, status: { in: ['ACTIVE', 'ON_HOLD'] } },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+        completionPercent: true,
+        stages: {
+          select: { stageName: true, status: true, plannedStartDate: true, plannedEndDate: true },
+          orderBy: { stageOrder: 'asc' },
+        },
+      },
+    });
+
+    const rows = projects.map((p) => {
+      const daysDelayed = p.endDate && p.endDate < now
+        ? Math.floor((now.getTime() - p.endDate.getTime()) / 86400000)
+        : 0;
+
+      const blockedStages = p.stages.filter(
+        (s) => s.plannedEndDate && s.plannedEndDate < now && s.status !== 'COMPLETED',
+      );
+
+      return {
+        id: p.id,
+        name: p.name,
+        code: p.code,
+        status: p.status,
+        endDate: p.endDate,
+        completionPercent: p.completionPercent,
+        daysDelayed,
+        isDelayed: daysDelayed > 0,
+        blockedStages: blockedStages.map((s) => ({
+          name: s.stageName,
+          status: s.status,
+          daysOverdue: s.plannedEndDate
+            ? Math.floor((now.getTime() - s.plannedEndDate.getTime()) / 86400000)
+            : 0,
+        })),
+      };
+    });
+
+    rows.sort((a, b) => b.daysDelayed - a.daysDelayed);
+
+    return {
+      reportType: 'DELAY',
+      generatedAt: new Date(),
+      rows,
+      delayedCount: rows.filter((r) => r.isDelayed).length,
+      onTrackCount: rows.filter((r) => !r.isDelayed).length,
+    };
+  }
+
+  async getProfitabilityReport(companyId: string, from?: string, to?: string) {
+    const projectFilter: any = { companyId, deletedAt: null, status: { not: 'DRAFT' } };
+
+    const projects = await this.prisma.project.findMany({
+      where: projectFilter,
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        status: true,
+        baselineBudget: true,
+        actualCost: true,
+        startDate: true,
+        endDate: true,
+        invoices: {
+          where: {
+            deletedAt: null,
+            ...(from || to
+              ? { issuedAt: { gte: from ? new Date(from) : undefined, lte: to ? new Date(to) : undefined } }
+              : {}),
+          },
+          select: { totalAmount: true, paidAmount: true, status: true },
+        },
+      },
+    });
+
+    const rows = projects.map((p) => {
+      const revenue = p.invoices.reduce((s, i) => s + Number(i.totalAmount), 0);
+      const collected = p.invoices.reduce((s, i) => s + Number(i.paidAmount), 0);
+      const cost = Number(p.actualCost);
+      const grossProfit = revenue - cost;
+      const margin = revenue > 0 ? Math.round((grossProfit / revenue) * 100) : 0;
+      return {
+        id: p.id,
+        name: p.name,
+        code: p.code,
+        status: p.status,
+        baselineBudget: Number(p.baselineBudget),
+        actualCost: cost,
+        revenue,
+        collected,
+        grossProfit,
+        margin,
+        invoiceCount: p.invoices.length,
+      };
+    });
+
+    rows.sort((a, b) => b.grossProfit - a.grossProfit);
+
+    const totals = rows.reduce(
+      (s, r) => ({
+        revenue: s.revenue + r.revenue,
+        actualCost: s.actualCost + r.actualCost,
+        grossProfit: s.grossProfit + r.grossProfit,
+      }),
+      { revenue: 0, actualCost: 0, grossProfit: 0 },
+    );
+
+    return {
+      reportType: 'PROFITABILITY',
+      generatedAt: new Date(),
+      period: { from, to },
+      rows,
+      totals: {
+        ...totals,
+        margin: totals.revenue > 0 ? Math.round((totals.grossProfit / totals.revenue) * 100) : 0,
+        cost: totals.actualCost,
+      },
+    };
+  }
+
+  async getProductivityReport(companyId: string, projectId?: string) {
+    const taskWhere: any = { companyId, deletedAt: null, parentTaskId: null };
+    if (projectId) taskWhere.projectId = projectId;
+
+    const [tasks, timeEntries] = await Promise.all([
+      this.prisma.task.findMany({
+        where: taskWhere,
+        select: {
+          id: true,
+          status: true,
+          priority: true,
+          estimatedHours: true,
+          project: { select: { id: true, name: true } },
+        },
+      }),
+      this.prisma.timeEntry.findMany({
+        where: { companyId, status: 'APPROVED', deletedAt: null, ...(projectId ? { projectId } : {}) },
+        select: { projectId: true, regularHours: true, overtimeHours: true, project: { select: { name: true } } },
+      }),
+    ]);
+
+    const byProject = new Map<string, {
+      projectId: string;
+      projectName: string;
+      total: number;
+      done: number;
+      inProgress: number;
+      blocked: number;
+      estimatedHours: number;
+      actualHours: number;
+    }>();
+
+    for (const t of tasks) {
+      const key = t.project.id;
+      if (!byProject.has(key)) {
+        byProject.set(key, {
+          projectId: key,
+          projectName: t.project.name,
+          total: 0,
+          done: 0,
+          inProgress: 0,
+          blocked: 0,
+          estimatedHours: 0,
+          actualHours: 0,
+        });
+      }
+      const row = byProject.get(key)!;
+      row.total++;
+      if (t.status === 'DONE') row.done++;
+      else if (t.status === 'IN_PROGRESS') row.inProgress++;
+      else if (t.status === 'BLOCKED') row.blocked++;
+      row.estimatedHours += Number(t.estimatedHours ?? 0);
+    }
+
+    for (const e of timeEntries) {
+      if (!byProject.has(e.projectId)) {
+        byProject.set(e.projectId, {
+          projectId: e.projectId,
+          projectName: e.project.name,
+          total: 0,
+          done: 0,
+          inProgress: 0,
+          blocked: 0,
+          estimatedHours: 0,
+          actualHours: 0,
+        });
+      }
+      byProject.get(e.projectId)!.actualHours +=
+        Number(e.regularHours) + Number(e.overtimeHours);
+    }
+
+    const rows = Array.from(byProject.values()).map((r) => ({
+      ...r,
+      completionRate: r.total > 0 ? Math.round((r.done / r.total) * 100) : 0,
+      hoursEfficiency:
+        r.estimatedHours > 0 ? Math.round((r.estimatedHours / r.actualHours) * 100) : null,
+    }));
+
+    const totals = rows.reduce(
+      (s, r) => ({ total: s.total + r.total, done: s.done + r.done }),
+      { total: 0, done: 0 },
+    );
+
+    return {
+      reportType: 'PRODUCTIVITY',
+      generatedAt: new Date(),
+      rows,
+      totals: {
+        ...totals,
+        completionRate: totals.total > 0 ? Math.round((totals.done / totals.total) * 100) : 0,
+      },
+    };
+  }
 }

@@ -9,6 +9,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { PaynowProvider } from './paynow.provider';
 import { PaymentInitiationRequest } from './interfaces/payment-provider.interface';
+import { seedWorkspaceDefaults } from '../onboarding/onboarding.service';
 
 @Injectable()
 export class BillingService {
@@ -240,7 +241,7 @@ export class BillingService {
   private async activateSubscriptionAfterPayment(subscriptionId: string) {
     const subscription = await this.prisma.subscription.findUnique({
       where: { id: subscriptionId },
-      select: { id: true, billingCycle: true, status: true },
+      select: { id: true, companyId: true, billingCycle: true, status: true },
     });
 
     if (!subscription || subscription.status === SubscriptionStatus.ACTIVE) return;
@@ -259,6 +260,8 @@ export class BillingService {
         currentPeriodTo: periodEnd,
       },
     });
+
+    void seedWorkspaceDefaults(this.prisma, subscription.companyId);
   }
 
   private async syncInvoiceTotals(invoiceId: string) {

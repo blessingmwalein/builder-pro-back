@@ -6,9 +6,18 @@ import {
   Injectable,
 } from '@nestjs/common';
 
+export type SubscriptionErrorCode =
+  | 'NO_SUBSCRIPTION'
+  | 'TRIAL_EXPIRED'
+  | 'SUBSCRIPTION_EXPIRED'
+  | 'SUBSCRIPTION_INACTIVE';
+
 class SubscriptionRequiredException extends HttpException {
-  constructor(message: string) {
-    super({ statusCode: HttpStatus.PAYMENT_REQUIRED, message, error: 'Payment Required' }, HttpStatus.PAYMENT_REQUIRED);
+  constructor(message: string, code: SubscriptionErrorCode) {
+    super(
+      { statusCode: HttpStatus.PAYMENT_REQUIRED, message, error: 'Payment Required', code },
+      HttpStatus.PAYMENT_REQUIRED,
+    );
   }
 }
 import { Reflector } from '@nestjs/core';
@@ -55,6 +64,14 @@ export class SubscriptionGuard implements CanActivate {
 
     if (isOnboardingRoute) return true;
 
+    // Allow payment polling so users can confirm a subscription payment even
+    // while their subscription is expired (would otherwise deadlock).
+    const isPaymentPoll =
+      originalUrl.includes('/billing/paynow/poll') ||
+      originalUrl.includes('/billing/paynow/status');
+
+    if (isPaymentPoll) return true;
+
     const subscription = await this.prisma.subscription.findFirst({
       where: { companyId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
@@ -64,6 +81,7 @@ export class SubscriptionGuard implements CanActivate {
     if (!subscription) {
       throw new SubscriptionRequiredException(
         'No subscription found. Please complete your account setup.',
+        'NO_SUBSCRIPTION',
       );
     }
 
@@ -73,6 +91,7 @@ export class SubscriptionGuard implements CanActivate {
       if (subscription.trialEndsAt && subscription.trialEndsAt < now) {
         throw new SubscriptionRequiredException(
           'Your free trial has expired. Activate a subscription to continue.',
+          'TRIAL_EXPIRED',
         );
       }
       return true;
@@ -82,6 +101,7 @@ export class SubscriptionGuard implements CanActivate {
       if (subscription.currentPeriodTo < now) {
         throw new SubscriptionRequiredException(
           'Your subscription has expired. Please renew to continue.',
+          'SUBSCRIPTION_EXPIRED',
         );
       }
       return true;
@@ -93,6 +113,7 @@ export class SubscriptionGuard implements CanActivate {
     ) {
       throw new SubscriptionRequiredException(
         'Your subscription is not active. Please update your billing.',
+        'SUBSCRIPTION_INACTIVE',
       );
     }
 

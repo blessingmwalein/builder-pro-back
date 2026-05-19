@@ -88,4 +88,42 @@ export class ReportingController {
   ) {
     return this.reportingService.generate(tenant.companyId, user.userId, dto);
   }
+
+  @Permissions('reports.*', 'reports.view')
+  @Get('budget-variance')
+  @ApiOperation({ summary: 'Budget variance: planned vs actual per category, over-budget flags' })
+  budgetVariance(
+    @Tenant() tenant: RequestTenant,
+    @Query('projectId') projectId?: string,
+  ) {
+    return this.reportingService.getBudgetVarianceReport(tenant.companyId, projectId);
+  }
+
+  @Permissions('reports.*', 'reports.view')
+  @Get('delays')
+  @ApiOperation({ summary: 'Project delay report: days overdue, blocked stages' })
+  delayReport(@Tenant() tenant: RequestTenant) {
+    return this.reportingService.getDelayReport(tenant.companyId);
+  }
+
+  @Permissions('reports.*', 'financials.view')
+  @Get('profitability')
+  @ApiOperation({ summary: 'Profitability per project: revenue, cost, gross profit, margin' })
+  profitabilityReport(
+    @Tenant() tenant: RequestTenant,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportingService.getProfitabilityReport(tenant.companyId, from, to);
+  }
+
+  @Permissions('reports.*', 'reports.view')
+  @Get('productivity')
+  @ApiOperation({ summary: 'Task completion rates and time efficiency per project' })
+  productivityReport(
+    @Tenant() tenant: RequestTenant,
+    @Query('projectId') projectId?: string,
+  ) {
+    return this.reportingService.getProductivityReport(tenant.companyId, projectId);
+  }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { CreateMaterialDto } from './dto/create-material.dto';
@@ -151,8 +151,8 @@ export class MaterialsService {
       supplierId?: string;
     },
   ) {
-    const limit = Math.min(query.limit, 100);
-    const skip = (query.page - 1) * limit;
+    const limit = Math.min(query.limit ?? 20, 100);
+    const skip = ((query.page ?? 1) - 1) * limit;
 
     const where: any = {
       companyId,
@@ -190,7 +190,7 @@ export class MaterialsService {
         )
       : items;
 
-    return { items: result, meta: { page: query.page, limit, total } };
+    return { items: result, meta: { page: query.page ?? 1, limit, total } };
   }
 
   async findOne(companyId: string, id: string) {
@@ -217,17 +217,28 @@ export class MaterialsService {
   async update(companyId: string, id: string, dto: UpdateMaterialDto) {
     const material = await this.prisma.material.findFirst({
       where: { id, companyId, deletedAt: null },
-      select: { id: true },
+      select: { id: true, unitCost: true, stockOnHand: true },
     });
 
     if (!material) throw new NotFoundException('Material not found');
 
-    return this.prisma.material.update({
+    const costChanged =
+      dto.unitCost !== undefined && Number(dto.unitCost) !== Number(material.unitCost);
+    const stockChanged =
+      dto.stockOnHand !== undefined && Number(dto.stockOnHand) !== Number(material.stockOnHand);
+
+    if ((costChanged || stockChanged) && !dto.reason?.trim()) {
+      throw new BadRequestException(
+        'A reason is required when changing price or stock quantities',
+      );
+    }
+
+    const updated = await this.prisma.material.update({
       where: { id },
       data: {
         name: dto.name,
         category: dto.category,
-        ...(dto.categoryId ? { categoryId: dto.categoryId } : {}),
+        ...(dto.categoryId !== undefined ? { categoryId: dto.categoryId || null } : {}),
         sku: dto.sku,
         unit: dto.unit,
         unitCost: dto.unitCost,
@@ -241,6 +252,45 @@ export class MaterialsService {
         categoryRef: { select: { id: true, code: true, name: true } } as any,
       } as any,
     });
+
+    // Immutable audit log entries for price/stock changes
+    const auditOps: any[] = [];
+    if (costChanged) {
+      auditOps.push(
+        this.prisma.materialLog.create({
+          data: {
+            companyId,
+            materialId: id,
+            entryType: 'PRICE_CHANGE',
+            quantity: 0,
+            unitCost: dto.unitCost!,
+            totalCost: 0,
+            usedAt: new Date(),
+            notes: `${dto.reason} [was: ${material.unitCost}, now: ${dto.unitCost}]`,
+          },
+        }),
+      );
+    }
+    if (stockChanged) {
+      const adjustment = Number(dto.stockOnHand) - Number(material.stockOnHand);
+      auditOps.push(
+        this.prisma.materialLog.create({
+          data: {
+            companyId,
+            materialId: id,
+            entryType: 'STOCK_CORRECTION',
+            quantity: adjustment,
+            unitCost: Number(updated.unitCost),
+            totalCost: Math.abs(adjustment) * Number(updated.unitCost),
+            usedAt: new Date(),
+            notes: `${dto.reason} [was: ${material.stockOnHand}, now: ${dto.stockOnHand}]`,
+          },
+        }),
+      );
+    }
+    if (auditOps.length > 0) await this.prisma.$transaction(auditOps);
+
+    return updated;
   }
 
   async remove(companyId: string, id: string) {
@@ -275,7 +325,7 @@ export class MaterialsService {
           unitCost: dto.unitCost,
           totalCost,
           notes: dto.notes,
-          usedAt: new Date(),
+          usedAt: dto.usedAt ? new Date(dto.usedAt) : new Date(),
         },
       }),
       this.prisma.material.update({
@@ -291,8 +341,8 @@ export class MaterialsService {
     companyId: string,
     query: PaginationQueryDto & { projectId?: string; materialId?: string },
   ) {
-    const limit = Math.min(query.limit, 100);
-    const skip = (query.page - 1) * limit;
+    const limit = Math.min(query.limit ?? 20, 100);
+    const skip = ((query.page ?? 1) - 1) * limit;
 
     const where = {
       companyId,
@@ -315,7 +365,7 @@ export class MaterialsService {
       this.prisma.materialLog.count({ where }),
     ]);
 
-    return { items, meta: { page: query.page, limit, total } };
+    return { items, meta: { page: query.page ?? 1, limit, total } };
   }
 
   async stockAdjust(companyId: string, id: string, qty: number) {
@@ -352,14 +402,15 @@ export class MaterialsService {
         address: dto.address,
         website: dto.website,
         notes: dto.notes,
+        categories: dto.categories,
       },
     });
   }
 
   async listSuppliers(companyId: string, query: PaginationQueryDto) {
     await this.ensureDefaultSuppliers(companyId);
-    const limit = Math.min(query.limit, 100);
-    const skip = (query.page - 1) * limit;
+    const limit = Math.min(query.limit ?? 20, 100);
+    const skip = ((query.page ?? 1) - 1) * limit;
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.supplier.findMany({
@@ -372,7 +423,7 @@ export class MaterialsService {
       this.prisma.supplier.count({ where: { companyId, deletedAt: null } }),
     ]);
 
-    return { items, meta: { page: query.page, limit, total } };
+    return { items, meta: { page: query.page ?? 1, limit, total } };
   }
 
   /**
@@ -508,8 +559,8 @@ export class MaterialsService {
     companyId: string,
     query: PaginationQueryDto & { projectId?: string; supplierId?: string },
   ) {
-    const limit = Math.min(query.limit, 100);
-    const skip = (query.page - 1) * limit;
+    const limit = Math.min(query.limit ?? 20, 100);
+    const skip = ((query.page ?? 1) - 1) * limit;
 
     const where = {
       companyId,
@@ -537,7 +588,7 @@ export class MaterialsService {
       this.prismaAny().materialPurchase.count({ where } as any),
     ]);
 
-    return { items, meta: { page: query.page, limit, total } };
+    return { items, meta: { page: query.page ?? 1, limit, total } };
   }
 
   async deleteSupplier(companyId: string, id: string) {
