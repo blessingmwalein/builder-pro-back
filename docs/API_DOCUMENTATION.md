@@ -1,4 +1,4 @@
-# BuilderPro API — Full Documentation
+# ownit2buildit API — Full Documentation
 > Base URL: `http://localhost:3005/api/v1`  
 > All tenant-scoped endpoints require `x-tenant-slug` header OR a valid Bearer token (tenant is resolved from JWT if header is omitted).
 
@@ -1932,7 +1932,7 @@ Returns a single company with enriched relations for admin operations:
       "platformPlan": {
         "id": "pp_xxx",
         "code": "PRO",
-        "name": "BuilderPro Pro"
+        "name": "ownit2buildit Pro"
       },
       "payments": [
         {
@@ -2270,4 +2270,4 @@ DELETE /platform-admin/companies/:companyId/rbac/users/:userId/roles/:roleId
 
 ---
 
-*Generated from BuilderPro backend source — `src/` + Postman collection.*
+*Generated from ownit2buildit backend source — `src/` + Postman collection.*

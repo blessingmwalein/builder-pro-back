@@ -3,7 +3,7 @@ import path from 'node:path';
 
 const baseInfo = {
   info: {
-    name: 'BuilderPro Full API Collection',
+    name: 'ownit2buildit Full API Collection',
     description:
       'Comprehensive collection for all /api/v1 endpoints. Includes sample request payloads and sample JSON responses based on DTOs and controller/service return shapes.',
     schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',

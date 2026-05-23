@@ -1,4 +1,4 @@
-# BuilderPro — Platform Admin Portal API Documentation
+# ownit2buildit — Platform Admin Portal API Documentation
 > Base URL: `http://localhost:3005/api/v1`  
 > All Platform Admin endpoints live under `/platform-admin/*`  
 > Two auth methods: **Bearer token** (from login) OR **API key** (`x-platform-admin-key` header)
@@ -479,4 +479,4 @@ x-platform-admin-key: <apiKey>
 
 ---
 
-*Platform Admin Portal — BuilderPro*
+*Platform Admin Portal — ownit2buildit*

@@ -1,4 +1,4 @@
-# BuilderPro Backend (NestJS + Prisma + PostgreSQL)
+# ownit2buildit Backend (NestJS + Prisma + PostgreSQL)
 
 Multi-tenant construction management backend with JWT auth, RBAC, Bull queues, WebSockets, and Swagger docs.
 

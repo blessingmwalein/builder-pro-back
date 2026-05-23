@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "BuilderPro Platform Admin",
+    "name": "ownit2buildit Platform Admin",
     "description": "Platform admin auth and management endpoints",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },

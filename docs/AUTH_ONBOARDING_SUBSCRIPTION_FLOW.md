@@ -1,4 +1,4 @@
-# BuilderPro New Auth + Onboarding + Subscription Payment Flow
+# ownit2buildit New Auth + Onboarding + Subscription Payment Flow
 
 This document defines the updated flow for:
 

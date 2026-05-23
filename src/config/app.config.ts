@@ -32,7 +32,7 @@ export default () => ({
     secure: (process.env.SMTP_SECURE ?? 'true').toLowerCase() === 'true',
     user: process.env.SMTP_USER ?? 'noreply@wakandasolarsystems.co.zw',
     password: process.env.SMTP_PASSWORD ?? '',
-    fromName: process.env.SMTP_FROM_NAME ?? 'BuilderPro',
+    fromName: process.env.SMTP_FROM_NAME ?? 'ownit2buildit',
     fromAddress:
       process.env.SMTP_FROM_ADDRESS ?? 'noreply@wakandasolarsystems.co.zw',
     appUrl: process.env.APP_PUBLIC_URL ?? 'http://localhost:3001',

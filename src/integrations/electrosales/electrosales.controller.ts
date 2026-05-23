@@ -16,7 +16,7 @@ export class ElectrosalesController {
     summary: 'Search Electrosales product catalog (external datasource)',
     description:
       'Proxies to electrosales.co.zw and normalizes the response into the shape the ' +
-      'BuilderPro web app expects when building quotes / invoices. Results include ' +
+      'ownit2buildit web app expects when building quotes / invoices. Results include ' +
       'name, SKU, price, supplier, availability and image. Limit capped at 50.',
   })
   searchProducts(

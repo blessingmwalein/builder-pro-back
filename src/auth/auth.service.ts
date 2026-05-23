@@ -376,7 +376,7 @@ export class AuthService {
     void this.mailService.sendInvite(user.email, {
       inviteeFirstName: user.firstName,
       inviteeEmail: user.email,
-      companyName: company?.name ?? 'BuilderPro',
+      companyName: company?.name ?? 'ownit2buildit',
       inviterName:
         [inviter?.firstName, inviter?.lastName].filter(Boolean).join(' ').trim() ||
         'Your teammate',
@@ -433,7 +433,7 @@ export class AuthService {
     void this.mailService.sendInvite(user.email, {
       inviteeFirstName: user.firstName,
       inviteeEmail: user.email,
-      companyName: company?.name ?? 'BuilderPro',
+      companyName: company?.name ?? 'ownit2buildit',
       inviterName: 'Your teammate',
       roleName: user.userRoles[0]?.role?.name,
       acceptUrl: this.mailService.buildAcceptInviteUrl(inviteToken),
