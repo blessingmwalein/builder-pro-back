@@ -64,8 +64,12 @@ export class QuotesController {
   @Permissions('quotes.*', 'quotes.send')
   @Put(':id/send')
   @ApiOperation({ summary: 'Send quote to client (DRAFT → SENT)' })
-  send(@Tenant() tenant: RequestTenant, @Param('id') id: string) {
-    return this.quotesService.send(tenant.companyId, id);
+  send(
+    @Tenant() tenant: RequestTenant,
+    @Param('id') id: string,
+    @Body() body: { sendEmail?: boolean } = {},
+  ) {
+    return this.quotesService.send(tenant.companyId, id, body.sendEmail ?? true);
   }
 
   @Permissions('quotes.*', 'quotes.approve')

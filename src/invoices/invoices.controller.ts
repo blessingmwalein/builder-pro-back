@@ -77,8 +77,12 @@ export class InvoicesController {
   @Permissions('invoices.*', 'invoices.send')
   @Put(':id/send')
   @ApiOperation({ summary: 'Send invoice to client (DRAFT → SENT)' })
-  send(@Tenant() tenant: RequestTenant, @Param('id') id: string) {
-    return this.invoicesService.send(tenant.companyId, id);
+  send(
+    @Tenant() tenant: RequestTenant,
+    @Param('id') id: string,
+    @Body() body: { sendEmail?: boolean } = {},
+  ) {
+    return this.invoicesService.send(tenant.companyId, id, body.sendEmail ?? true);
   }
 
   @Permissions('invoices.*', 'invoices.create')

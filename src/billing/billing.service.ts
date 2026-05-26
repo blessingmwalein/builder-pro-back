@@ -241,12 +241,23 @@ export class BillingService {
   private async activateSubscriptionAfterPayment(subscriptionId: string) {
     const subscription = await this.prisma.subscription.findUnique({
       where: { id: subscriptionId },
-      select: { id: true, companyId: true, billingCycle: true, status: true },
+      select: { id: true, companyId: true, billingCycle: true, status: true, currentPeriodTo: true },
     });
 
-    if (!subscription || subscription.status === SubscriptionStatus.ACTIVE) return;
+    if (!subscription) return;
 
     const now = new Date();
+
+    // Skip only if genuinely active (not expired). An expired subscription has
+    // status=ACTIVE but currentPeriodTo in the past — it must still be renewed.
+    if (
+      subscription.status === SubscriptionStatus.ACTIVE &&
+      subscription.currentPeriodTo != null &&
+      subscription.currentPeriodTo > now
+    ) {
+      return;
+    }
+
     const periodEnd = new Date(now);
     subscription.billingCycle === 'ANNUAL'
       ? periodEnd.setFullYear(periodEnd.getFullYear() + 1)

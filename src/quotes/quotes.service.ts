@@ -252,7 +252,7 @@ export class QuotesService {
     });
   }
 
-  async send(companyId: string, id: string) {
+  async send(companyId: string, id: string, sendEmail = true) {
     const quote = await this.prisma.quote.findFirst({
       where: { id, companyId, deletedAt: null },
       include: {
@@ -275,7 +275,7 @@ export class QuotesService {
       },
     });
 
-    if (quote.client?.email) {
+    if (sendEmail && quote.client?.email) {
       const company = await this.prisma.company.findUnique({
         where: { id: companyId },
         select: { name: true, defaultCurrency: true },

@@ -43,7 +43,6 @@ export class BillingController {
     });
   }
 
-  @Permissions('invoices.*')
   @Post('paynow/poll')
   poll(
     @Tenant() tenant: RequestTenant,

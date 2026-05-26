@@ -10,9 +10,12 @@ async function bootstrap() {
 
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
+  //add admin
+
   const defaultOrigins = [
     'https://builder-pro-web.vercel.app',
     'https://ownit2buildit.com',
+    'https://admin.ownit2buildit.com',
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:5173',

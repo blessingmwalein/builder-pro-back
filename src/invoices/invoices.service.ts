@@ -177,7 +177,7 @@ export class InvoicesService {
     });
   }
 
-  async send(companyId: string, id: string) {
+  async send(companyId: string, id: string, sendEmail = true) {
     const invoice = await this.prisma.invoice.findFirst({
       where: { id, companyId, deletedAt: null },
       include: {
@@ -200,7 +200,7 @@ export class InvoicesService {
       },
     });
 
-    if (invoice.client?.email) {
+    if (sendEmail && invoice.client?.email) {
       const company = await this.prisma.company.findUnique({
         where: { id: companyId },
         select: { name: true, defaultCurrency: true },

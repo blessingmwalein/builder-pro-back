@@ -385,6 +385,24 @@ export class AuthService {
       expiresAt: inviteTokenExpiresAt,
     });
 
+    // Optionally create an Employee record linked to this user
+    let employeeId: string | undefined;
+    if (dto.createAsEmployee && dto.employeeJobTitle && dto.employeeHourlyRate != null) {
+      const emp = await this.prisma.employee.create({
+        data: {
+          companyId,
+          userId: user.id,
+          jobTitle: dto.employeeJobTitle,
+          employmentType: (dto.employeeType as any) ?? 'FULL_TIME',
+          hourlyRate: dto.employeeHourlyRate,
+          employeeCode: dto.employeeCode ?? `EMP-${Date.now()}`,
+          startDate: new Date(),
+        },
+        select: { id: true },
+      });
+      employeeId = emp.id;
+    }
+
     return {
       userId: user.id,
       email: user.email,
@@ -393,6 +411,7 @@ export class AuthService {
       inviteToken: user.inviteToken,
       inviteLink: `/auth/accept-invite?token=${inviteToken}`,
       expiresAt: inviteTokenExpiresAt,
+      employeeId,
     };
   }
 
