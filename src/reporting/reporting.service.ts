@@ -100,11 +100,11 @@ export class ReportingService {
   ) {
     const where: any = {
       companyId,
-      status: 'APPROVED',
+      status: { in: ['APPROVED', 'PENDING'] },
       deletedAt: null,
       clockInAt: {
         gte: new Date(from),
-        lte: new Date(to),
+        lte: new Date(to + 'T23:59:59'),
       },
     };
 
@@ -191,7 +191,14 @@ export class ReportingService {
     const logs = await this.prisma.materialLog.findMany({
       where,
       include: {
-        material: { select: { name: true, category: true, unit: true } },
+        material: {
+          select: {
+            name: true,
+            category: true,
+            unit: true,
+            categoryRef: { select: { name: true } } as any,
+          },
+        },
         project: { select: { name: true } },
       },
       orderBy: { usedAt: 'desc' },
@@ -200,7 +207,8 @@ export class ReportingService {
     const byCategory = new Map<string, { category: string; totalCost: number; quantity: number }>();
 
     for (const log of logs) {
-      const cat = log.material.category ?? 'Uncategorised';
+      const mat = log.material as typeof log.material & { categoryRef?: { name: string } | null };
+      const cat = mat.categoryRef?.name ?? mat.category ?? 'Uncategorised';
       if (!byCategory.has(cat)) {
         byCategory.set(cat, { category: cat, totalCost: 0, quantity: 0 });
       }
@@ -222,6 +230,9 @@ export class ReportingService {
 
   async getFinancialSummaryReport(companyId: string, from?: string, to?: string) {
     const projectFilter: any = { companyId, deletedAt: null };
+    const dateFilter = (from || to)
+      ? { issueDate: { gte: from ? new Date(from) : undefined, lte: to ? new Date(to + 'T23:59:59') : undefined } }
+      : {};
 
     const [projects, invoices] = await Promise.all([
       this.prisma.project.findMany({
@@ -234,13 +245,13 @@ export class ReportingService {
           baselineBudget: true,
           actualCost: true,
           invoices: {
-            where: { deletedAt: null },
+            where: { deletedAt: null, ...dateFilter },
             select: { totalAmount: true, paidAmount: true, balanceAmount: true, status: true },
           },
         },
       }),
       this.prisma.invoice.findMany({
-        where: { ...projectFilter },
+        where: { ...projectFilter, ...dateFilter },
         select: { totalAmount: true, paidAmount: true, balanceAmount: true, status: true },
       }),
     ]);
@@ -405,7 +416,7 @@ export class ReportingService {
           where: {
             deletedAt: null,
             ...(from || to
-              ? { issuedAt: { gte: from ? new Date(from) : undefined, lte: to ? new Date(to) : undefined } }
+              ? { issueDate: { gte: from ? new Date(from) : undefined, lte: to ? new Date(to + 'T23:59:59') : undefined } }
               : {}),
           },
           select: { totalAmount: true, paidAmount: true, status: true },

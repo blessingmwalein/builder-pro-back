@@ -1008,6 +1008,8 @@ model FinancialTransaction {
   occurredAt   DateTime
   sourceType   String
   sourceId     String?
+  vendor       String?
+  notes        String?
   // Proof-of-purchase (receipts, invoices, etc).
   receiptKey   String?
   receiptUrl   String?

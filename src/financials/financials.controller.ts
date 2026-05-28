@@ -79,6 +79,17 @@ export class FinancialsController {
   }
 
   @Permissions('financials.*', 'financials.view')
+  @Get('projects/:projectId/budget/:categoryId/ledger')
+  @ApiOperation({ summary: 'Drill-down ledger for a single budget category' })
+  getCategoryLedger(
+    @Tenant() tenant: RequestTenant,
+    @Param('projectId') projectId: string,
+    @Param('categoryId') categoryId: string,
+  ) {
+    return this.financialsService.getCategoryLedger(tenant.companyId, projectId, categoryId);
+  }
+
+  @Permissions('financials.*', 'financials.view')
   @Get('projects/:projectId/transactions')
   @ApiOperation({ summary: 'List financial transactions for a project' })
   listTransactions(

@@ -192,9 +192,18 @@ export class FinancialsService {
     const totalPlanned = budgets.reduce((s, b) => s + Number(b.plannedAmount), 0);
     const totalActual = budgets.reduce((s, b) => s + Number(b.actualAmount), 0);
 
+    const enrichedBudgets = budgets.map((b) => {
+      const planned = Number(b.plannedAmount);
+      const actual = Number(b.actualAmount);
+      const pct = planned > 0 ? Math.round((actual / planned) * 100) : 0;
+      const status =
+        actual > planned ? 'OVER_BUDGET' : pct >= b.thresholdPct ? 'WARNING' : 'ON_TRACK';
+      return { ...b, percentUsed: pct, status };
+    });
+
     return {
       project,
-      budgets,
+      budgets: enrichedBudgets,
       totalPlanned,
       totalActual,
       variance: totalPlanned - totalActual,
@@ -258,6 +267,8 @@ export class FinancialsService {
         occurredAt: dto.occurredAt ? new Date(dto.occurredAt) : new Date(),
         reference: dto.reference,
         sourceType: dto.sourceType ?? 'MANUAL',
+        vendor: dto.vendor ?? null,
+        notes: dto.notes ?? null,
       },
     });
 
@@ -296,6 +307,52 @@ export class FinancialsService {
     ]);
 
     return { items, meta: { page: query.page, limit, total } };
+  }
+
+  async getCategoryLedger(companyId: string, projectId: string, categoryId: string) {
+    const [category, budget, transactions, materialLogs, timeEntries] = await Promise.all([
+      this.prisma.budgetCategory.findFirst({
+        where: { id: categoryId, companyId, deletedAt: null },
+      }),
+      this.prisma.budget.findFirst({
+        where: { companyId, projectId, categoryId, deletedAt: null },
+      }),
+      this.prisma.financialTransaction.findMany({
+        where: { companyId, projectId, categoryId, deletedAt: null },
+        orderBy: { occurredAt: 'desc' },
+      }),
+      // Material usage logs — shown under any category so the PM sees material spend in context
+      this.prisma.materialLog.findMany({
+        where: { companyId, projectId, deletedAt: null, entryType: 'USAGE' },
+        include: { material: { select: { id: true, name: true, unit: true } } },
+        orderBy: { usedAt: 'desc' },
+      }),
+      // Labour time entries
+      this.prisma.timeEntry.findMany({
+        where: { companyId, projectId, deletedAt: null },
+        include: { worker: { select: { id: true, firstName: true, lastName: true } } },
+        orderBy: { clockInAt: 'desc' },
+      }),
+    ]);
+
+    if (!category) throw new NotFoundException('Budget category not found');
+
+    const totalTransactions = transactions.reduce((s, t) => s + Number(t.amount), 0);
+    const totalMaterialUsage = materialLogs.reduce((s, l) => s + Number(l.totalCost), 0);
+    const totalLabour = timeEntries.reduce((s, e) => s + Number(e.labourCost), 0);
+
+    return {
+      category,
+      budget,
+      transactions,
+      materialLogs: category.code === 'MATERIALS' ? materialLogs : [],
+      timeEntries: category.code === 'LABOUR' ? timeEntries : [],
+      totals: {
+        transactions: totalTransactions,
+        materialUsage: category.code === 'MATERIALS' ? totalMaterialUsage : 0,
+        labour: category.code === 'LABOUR' ? totalLabour : 0,
+      },
+    };
   }
 
   async listBudgetCategories(companyId: string) {

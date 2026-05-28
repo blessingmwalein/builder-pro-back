@@ -32,4 +32,14 @@ export class CreateTransactionDto {
   @IsOptional()
   @IsString()
   sourceType?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  vendor?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
