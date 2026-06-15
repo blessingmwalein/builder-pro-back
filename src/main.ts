@@ -40,7 +40,7 @@ async function bootstrap() {
   );
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Builder Pro API')
+    .setTitle('ownit2buildit API')
     .setDescription('Multi-tenant Construction Project Management Platform API')
     .setVersion('1.0.0')
     .addApiKey(

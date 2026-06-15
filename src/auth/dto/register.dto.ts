@@ -26,7 +26,7 @@ export class RegisterDto {
   password!: string;
 
   @ApiPropertyOptional({
-    example: 'Builder Pro Demo',
+    example: 'ownit2buildit Demo',
     description: 'Company name used to auto-generate tenant slug when companySlug is omitted',
   })
   @IsOptional()

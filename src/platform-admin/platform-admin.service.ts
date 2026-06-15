@@ -562,6 +562,46 @@ export class PlatformAdminService {
     return this.rbacService.removeRoleFromUser(companyId, userId, roleId);
   }
 
+  listAllPlans() {
+    return this.prisma.platformPlan.findMany({
+      orderBy: [{ isActive: 'desc' }, { sortOrder: 'asc' }],
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        description: true,
+        targetAccountType: true,
+        monthlyPrice: true,
+        annualPrice: true,
+        limits: true,
+        features: true,
+        sortOrder: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async updatePlan(
+    id: string,
+    data: {
+      name?: string;
+      description?: string;
+      monthlyPrice?: number;
+      annualPrice?: number;
+      features?: string[];
+      limits?: Record<string, unknown>;
+      isActive?: boolean;
+      sortOrder?: number;
+    },
+  ) {
+    const plan = await this.prisma.platformPlan.findUnique({ where: { id } });
+    if (!plan) throw new NotFoundException('Plan not found');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return this.prisma.platformPlan.update({ where: { id }, data: data as any });
+  }
+
   private getPlatformAdminJwtSecret(): string {
     const secret = this.configService.get<string>('platformAdmin.jwtSecret') ?? '';
 

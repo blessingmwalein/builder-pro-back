@@ -95,7 +95,7 @@ const parsePlatformAdminSeeds = (): PlatformAdminSeedInput[] => {
 };
 
 async function main() {
-  const companyName = process.env.DEFAULT_COMPANY_NAME ?? 'Builder Pro Demo';
+  const companyName = process.env.DEFAULT_COMPANY_NAME ?? 'ownit2buildit Demo';
   const companySlug = process.env.DEFAULT_COMPANY_SLUG ?? 'builder-pro-demo';
   const ownerEmail = process.env.DEFAULT_OWNER_EMAIL ?? 'owner@builderpro.local';
   const ownerPassword = process.env.DEFAULT_OWNER_PASSWORD ?? 'ChangeMe123!';
@@ -237,117 +237,55 @@ async function main() {
   }
 
   // ─── Platform-wide Subscription Plans ───────────────────────────────────
-  // Individual / sole contractor plans
-  const INDIVIDUAL_PLANS = [
+  // Deactivate legacy plans so they no longer appear on the pricing page
+  // but existing subscriptions referencing them still resolve.
+  await prisma.platformPlan.updateMany({
+    where: {
+      code: { in: ['SOLE_STARTER', 'SOLE_GROWTH', 'SOLE_PROFESSIONAL', 'SOLE_PRO', 'BUSINESS', 'SMALL_BUSINESS'] },
+    },
+    data: { isActive: false, sortOrder: 99 },
+  });
+
+  // Per-person pricing: monthlyPrice = price per user per month,
+  // annualPrice = price per user per year (≈ 10 months, 2 months free).
+  // limits.maxUsers caps the team size; limits.perPerson flags the billing model.
+  const ALL_PLANS = [
     {
-      code: 'SOLE_STARTER',
-      name: 'Sole Starter',
-      description: 'For independent tradespeople managing small repairs and renovations.',
+      code: 'SOLE_TRADER',
+      name: 'Sole Trader',
+      description: 'For independent tradespeople and sole contractors.',
       targetAccountType: 'INDIVIDUAL' as const,
-      monthlyPrice: 19,
-      annualPrice: 182,
+      monthlyPrice: 22,    // per person/month
+      annualPrice: 220,    // per person/year (2 months free)
       sortOrder: 1,
-      limits: { maxProjects: 8, maxUsers: 2, storageGb: 10 },
+      limits: { maxProjects: 20, maxUsers: 5, storageGb: 30, perPerson: true },
       features: [
-        'Up to 2 user seats',
-        '8 active projects',
-        '10 GB document storage',
+        '$22/person/month · up to 5 users',
+        '20 active projects',
+        '30 GB document storage',
         'Quotes & invoices',
-        'Material tracking',
-        'Time & attendance logging',
+        'Material & time tracking',
         'Client portal access',
       ],
     },
     {
-      code: 'SOLE_GROWTH',
-      name: 'Sole Growth',
-      description: 'For growing independent contractors taking on larger or multiple projects.',
-      targetAccountType: 'INDIVIDUAL' as const,
-      monthlyPrice: 39,
-      annualPrice: 374,
-      sortOrder: 2,
-      limits: { maxProjects: 25, maxUsers: 5, storageGb: 30 },
-      features: [
-        'Up to 5 user seats',
-        '25 active projects',
-        '30 GB document storage',
-        'Quotes, variations & invoices',
-        'Budget & financial control',
-        'Subcontractor management',
-        'Advanced reporting',
-        'Everything in Sole Starter',
-      ],
-    },
-    {
-      code: 'SOLE_PROFESSIONAL',
-      name: 'Sole Professional',
-      description: 'For established contractors managing large-scale projects and teams.',
-      targetAccountType: 'INDIVIDUAL' as const,
-      monthlyPrice: 59,
-      annualPrice: 566,
-      sortOrder: 3,
-      limits: { maxProjects: 50, maxUsers: 10, storageGb: 100 },
-      features: [
-        'Up to 10 user seats',
-        '50 active projects',
-        '100 GB document storage',
-        'Priority support',
-        'Custom workflow templates',
-        'Everything in Sole Growth',
-      ],
-    },
-    // Backward-compat alias for SOLE_GROWTH
-    {
-      code: 'SOLE_PRO',
-      name: 'Sole Pro',
-      description: 'Legacy plan — equivalent to Sole Growth.',
-      targetAccountType: 'INDIVIDUAL' as const,
-      monthlyPrice: 39,
-      annualPrice: 374,
-      sortOrder: 99,
-      limits: { maxProjects: 25, maxUsers: 5, storageGb: 30 },
-      features: [],
-    },
-  ];
-
-  // Company plans
-  const PLATFORM_PLANS = [
-    {
       code: 'TEAM',
       name: 'Team',
-      description: 'For small construction companies with up to 15 staff.',
+      description: 'For small construction companies managing multiple projects.',
       targetAccountType: 'COMPANY' as const,
-      monthlyPrice: 79,
-      annualPrice: 758,
-      sortOrder: 4,
-      limits: { maxProjects: 50, maxUsers: 15, storageGb: 100 },
+      monthlyPrice: 19,    // per person/month
+      annualPrice: 190,    // per person/year
+      sortOrder: 2,
+      limits: { maxProjects: 50, maxUsers: 10, storageGb: 100, perPerson: true },
       features: [
-        'Up to 15 user seats',
+        '$19/person/month · up to 10 users',
         '50 active projects',
         '100 GB storage',
         'Team time tracking & approval',
         'Quotes, variations & invoices',
         'Budget & financial control',
-        'CRM',
-        'Messaging & reporting',
-      ],
-    },
-    {
-      code: 'BUSINESS',
-      name: 'Business',
-      description: 'For growing companies managing multiple large projects and teams.',
-      targetAccountType: 'COMPANY' as const,
-      monthlyPrice: 149,
-      annualPrice: 1430,
-      sortOrder: 5,
-      limits: { maxProjects: 200, maxUsers: 50, storageGb: 500 },
-      features: [
-        'Up to 50 user seats',
-        '200 active projects',
-        '500 GB storage',
-        'Advanced reporting & exports',
-        'Priority email support',
-        'Everything in Team',
+        'CRM & messaging',
+        'Reporting & exports',
       ],
     },
     {
@@ -355,35 +293,22 @@ async function main() {
       name: 'Enterprise',
       description: 'Full platform access for large construction businesses.',
       targetAccountType: 'COMPANY' as const,
-      monthlyPrice: 299,
-      annualPrice: 2870,
-      sortOrder: 6,
-      limits: { maxProjects: -1, maxUsers: -1, storageGb: -1 },
+      monthlyPrice: 17,    // per person/month
+      annualPrice: 170,    // per person/year
+      sortOrder: 3,
+      limits: { maxProjects: -1, maxUsers: 50, storageGb: -1, perPerson: true, extraUsersByRequest: true },
       features: [
-        'Unlimited user seats',
+        '$17/person/month · up to 50 users',
+        'Additional users available on request',
         'Unlimited projects',
-        'Unlimited storage (2 TB base)',
+        'Unlimited storage',
         'Priority support & SLA',
         'Custom integrations',
         'White-label options',
-        'Everything in Business',
+        'Dedicated account manager',
       ],
     },
-    // Backward-compat alias for TEAM
-    {
-      code: 'SMALL_BUSINESS',
-      name: 'Small Business',
-      description: 'Legacy plan — equivalent to Team.',
-      targetAccountType: 'COMPANY' as const,
-      monthlyPrice: 70,
-      annualPrice: 672,
-      sortOrder: 98,
-      limits: { maxProjects: 20, maxUsers: 10, storageGb: 50 },
-      features: [],
-    },
   ];
-
-  const ALL_PLANS = [...INDIVIDUAL_PLANS, ...PLATFORM_PLANS];
 
   for (const plan of ALL_PLANS) {
     await prisma.platformPlan.upsert({
@@ -432,7 +357,7 @@ async function main() {
   // eslint-disable-next-line no-console
   console.log(`Seeded ${platformAdminSeeds.length} platform admin user(s)`);
   // eslint-disable-next-line no-console
-  console.log(`Seeded ${ALL_PLANS.length} platform subscription plans (${INDIVIDUAL_PLANS.length} individual, ${PLATFORM_PLANS.length} company)`);
+  console.log(`Seeded ${ALL_PLANS.length} platform subscription plans`);
 }
 
 async function backfillExistingAccounts() {

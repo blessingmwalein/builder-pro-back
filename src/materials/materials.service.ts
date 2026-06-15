@@ -314,25 +314,53 @@ export class MaterialsService {
 
     const totalCost = dto.quantity * dto.unitCost;
 
-    const [log] = await this.prisma.$transaction([
-      this.prisma.materialLog.create({
-        data: {
-          companyId,
-          projectId: dto.projectId,
-          materialId: dto.materialId,
-          supplierId: dto.supplierId,
-          quantity: dto.quantity,
-          unitCost: dto.unitCost,
-          totalCost,
-          notes: dto.notes,
-          usedAt: dto.usedAt ? new Date(dto.usedAt) : new Date(),
-        },
-      }),
-      this.prisma.material.update({
-        where: { id: dto.materialId },
-        data: { stockOnHand: { decrement: dto.quantity } },
-      }),
-    ]);
+    const log = await this.prisma.$transaction(async (tx) => {
+      const [created] = await Promise.all([
+        tx.materialLog.create({
+          data: {
+            companyId,
+            projectId: dto.projectId,
+            materialId: dto.materialId,
+            supplierId: dto.supplierId,
+            quantity: dto.quantity,
+            unitCost: dto.unitCost,
+            totalCost,
+            notes: dto.notes,
+            usedAt: dto.usedAt ? new Date(dto.usedAt) : new Date(),
+          },
+        }),
+        tx.material.update({
+          where: { id: dto.materialId },
+          data: { stockOnHand: { decrement: dto.quantity } },
+        }),
+      ]);
+
+      if (dto.projectId) {
+        const materialsCategory = await tx.budgetCategory.findFirst({
+          where: { companyId, code: 'MATERIALS', deletedAt: null },
+          select: { id: true },
+        });
+        if (materialsCategory) {
+          await Promise.all([
+            tx.budget.updateMany({
+              where: {
+                companyId,
+                projectId: dto.projectId,
+                categoryId: materialsCategory.id,
+                deletedAt: null,
+              },
+              data: { actualAmount: { increment: totalCost } },
+            }),
+            tx.project.update({
+              where: { id: dto.projectId },
+              data: { actualCost: { increment: totalCost } },
+            }),
+          ]);
+        }
+      }
+
+      return created;
+    });
 
     return log;
   }

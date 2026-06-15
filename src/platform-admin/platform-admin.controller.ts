@@ -213,4 +213,29 @@ export class PlatformAdminController {
   deletePromoCode(@Param('id') id: string) {
     return this.promoCodesService.remove(id);
   }
+
+  // ── Subscription plan management ──────────────────────────────────────────
+
+  @Get('plans')
+  listPlans() {
+    return this.platformAdminService.listAllPlans();
+  }
+
+  @Patch('plans/:id')
+  updatePlan(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      name?: string;
+      description?: string;
+      monthlyPrice?: number;
+      annualPrice?: number;
+      features?: string[];
+      limits?: Record<string, unknown>;
+      isActive?: boolean;
+      sortOrder?: number;
+    },
+  ) {
+    return this.platformAdminService.updatePlan(id, body);
+  }
 }

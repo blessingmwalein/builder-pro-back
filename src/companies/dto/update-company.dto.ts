@@ -135,7 +135,7 @@ export class UpdateIndividualProfileDto {
 }
 
 export class UpdateCompanyDto {
-  @ApiPropertyOptional({ example: 'Builder Pro Zimbabwe' })
+  @ApiPropertyOptional({ example: 'ownit2buildit Zimbabwe' })
   @IsOptional()
   @IsString()
   name?: string;
@@ -156,7 +156,7 @@ export class UpdateCompanyDto {
   timezone?: string;
 
   // Extended profile fields
-  @ApiPropertyOptional({ example: 'Builder Pro Zimbabwe (Pvt) Ltd' })
+  @ApiPropertyOptional({ example: 'ownit2buildit Zimbabwe (Pvt) Ltd' })
   @IsOptional()
   @IsString()
   legalName?: string;
