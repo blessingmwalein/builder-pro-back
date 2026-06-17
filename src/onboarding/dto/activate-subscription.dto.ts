@@ -26,7 +26,7 @@ export class ActivateSubscriptionDto {
   billingCycle?: BillingCycle;
 
   @ApiPropertyOptional({
-    example: 'SMALL_BUSINESS',
+    example: 'TEAM',
     description: 'Change to a different plan at activation time (optional)',
   })
   @IsOptional()

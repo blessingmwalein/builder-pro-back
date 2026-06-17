@@ -59,8 +59,8 @@ export class RegisterCompanyDto {
   password: string;
 
   @ApiPropertyOptional({
-    example: 'SMALL_BUSINESS',
-    description: 'Platform plan code. Defaults to SMALL_BUSINESS (14-day free trial).',
+    example: 'TEAM',
+    description: 'Platform plan code. Defaults to TEAM (14-day free trial). Options: SOLE_TRADER, TEAM, ENTERPRISE.',
   })
   @IsOptional()
   @IsString()

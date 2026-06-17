@@ -37,7 +37,7 @@ export class OnboardingController {
     description:
       'Creates the company, owner user, default roles/permissions and a 14-day free trial subscription. ' +
       'Returns an access token so the user can start immediately. ' +
-      'Pass planCode from GET /onboarding/plans to pre-select a plan (defaults to SMALL_BUSINESS).',
+      'Pass planCode from GET /onboarding/plans to pre-select a plan (defaults to TEAM). Valid codes: SOLE_TRADER, TEAM, ENTERPRISE.',
   })
   register(@Body() dto: RegisterCompanyDto) {
     return this.onboardingService.registerCompany(dto);

@@ -232,7 +232,7 @@ export class OnboardingService {
       );
     }
 
-    const planCode = dto.planCode ?? 'SMALL_BUSINESS';
+    const planCode = dto.planCode ?? 'TEAM';
     const platformPlan = await this.prisma.platformPlan.findFirst({
       where: { code: planCode, isActive: true, deletedAt: null },
     });
@@ -455,7 +455,7 @@ export class OnboardingService {
     });
 
     if (!subscription) {
-      const initialPlanCode = dto.planCode ?? 'SMALL_BUSINESS';
+      const initialPlanCode = dto.planCode ?? 'TEAM';
       const initialPlatformPlan = await this.prisma.platformPlan.findFirst({
         where: { code: initialPlanCode, isActive: true, deletedAt: null },
       });
