@@ -216,6 +216,7 @@ model Company {
   website               String?
   companySize           String?
   yearsOperating        Int?
+  teamSize              Int?
   description           String?
   businessPhone         String?
   businessEmail         String?

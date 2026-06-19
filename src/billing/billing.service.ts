@@ -10,12 +10,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaynowProvider } from './paynow.provider';
 import { PaymentInitiationRequest } from './interfaces/payment-provider.interface';
 import { seedWorkspaceDefaults } from '../onboarding/onboarding.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class BillingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paynowProvider: PaynowProvider,
+    private readonly mailService: MailService,
   ) {}
 
   async initiatePaynowPayment(input: PaymentInitiationRequest) {
@@ -241,7 +243,20 @@ export class BillingService {
   private async activateSubscriptionAfterPayment(subscriptionId: string) {
     const subscription = await this.prisma.subscription.findUnique({
       where: { id: subscriptionId },
-      select: { id: true, companyId: true, billingCycle: true, status: true, currentPeriodTo: true },
+      include: {
+        platformPlan: { select: { name: true } },
+        company: {
+          select: {
+            name: true,
+            users: {
+              where: { deletedAt: null, isActive: true },
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+              select: { email: true, firstName: true },
+            },
+          },
+        },
+      },
     });
 
     if (!subscription) return;
@@ -273,6 +288,19 @@ export class BillingService {
     });
 
     void seedWorkspaceDefaults(this.prisma, subscription.companyId);
+
+    // Send subscription-activated email to the company owner/admin
+    const owner = subscription.company?.users?.[0];
+    if (owner) {
+      void this.mailService.sendSubscriptionActivated(owner.email, {
+        firstName: owner.firstName,
+        companyName: subscription.company.name,
+        planName: subscription.platformPlan?.name ?? 'Subscription',
+        billingCycle: (subscription.billingCycle ?? 'MONTHLY') as 'MONTHLY' | 'ANNUAL',
+        periodTo: periodEnd,
+        dashboardUrl: this.mailService.buildDashboardUrl(),
+      });
+    }
   }
 
   private async syncInvoiceTotals(invoiceId: string) {

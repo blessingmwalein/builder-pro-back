@@ -266,6 +266,7 @@ export class OnboardingService {
           website: dto.website,
           companySize: dto.companySize,
           yearsOperating: dto.yearsOperating,
+          teamSize: dto.teamSize,
           description: dto.description,
           businessPhone: dto.businessPhone,
           businessEmail: dto.businessEmail,
@@ -411,7 +412,6 @@ export class OnboardingService {
     void this.mailService.sendWelcome(result.user.email, {
       firstName: result.user.firstName,
       companyName: result.company.name,
-      trialDays: trialDaysLeft,
       dashboardUrl: this.mailService.buildDashboardUrl(),
     });
 

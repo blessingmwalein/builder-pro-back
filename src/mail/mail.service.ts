@@ -11,6 +11,7 @@ import { renderPasswordResetEmail, type PasswordResetEmailInput } from './templa
 import { renderQuoteEmail, type QuoteEmailInput } from './templates/quote';
 import { renderInvoiceEmail, type InvoiceEmailInput } from './templates/invoice';
 import { renderSubscriptionReminderEmail, type SubscriptionReminderEmailInput } from './templates/subscription-reminder';
+import { renderSubscriptionActivatedEmail, type SubscriptionActivatedEmailInput } from './templates/subscription-activated';
 import { type RenderedEmail } from './templates/layout';
 
 @Injectable()
@@ -118,6 +119,16 @@ export class MailService implements OnModuleInit {
     await this.sendRendered(
       to,
       renderInvoiceEmail({ ...payload, brandName: this.fromName, appUrl: this.appUrl }),
+    );
+  }
+
+  async sendSubscriptionActivated(
+    to: string,
+    payload: Omit<SubscriptionActivatedEmailInput, 'brandName' | 'appUrl'>,
+  ) {
+    await this.sendRendered(
+      to,
+      renderSubscriptionActivatedEmail({ ...payload, brandName: this.fromName, appUrl: this.appUrl }),
     );
   }
 

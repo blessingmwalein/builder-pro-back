@@ -78,6 +78,12 @@ export class RegisterCompanyDto {
   @ApiPropertyOptional() @IsOptional() @IsString() businessEmail?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() city?: string;
 
+  @ApiPropertyOptional({ example: 5, description: 'Number of user seats — determines per-person billing total.' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  teamSize?: number;
+
   // ── Individual business profile fields (Step 3A) ──────────────
   @ApiPropertyOptional() @IsOptional() @IsString() businessName?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() primarySector?: string;
